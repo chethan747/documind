@@ -1,0 +1,8 @@
+"""DocuMind — AI Document Intelligence Platform.
+
+A retrieval-augmented generation (RAG) system built from scratch in pure
+Python (standard library only): chunking, TF-IDF retrieval, and extractive
+question answering with source citations.
+"""
+
+__version__ = "0.1.0"
