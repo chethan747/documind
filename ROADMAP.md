@@ -1,0 +1,38 @@
+# DocuMind — 21-Day Build Roadmap
+
+DocuMind is built in public over 21 days: one focused task per day, each one
+committed and verified. The goal is a complete, resume-ready AI Document
+Intelligence Platform by Day 21.
+
+## Week 1 — Core engine
+
+- [x] **Day 1** — Project scaffold, overlapping chunker, TF-IDF vectoriser
+      from scratch, cosine-similarity index, extractive QA with citations,
+      CLI (ingest / ask / demo), unit tests
+- [ ] **Day 2** — Document ingestion pipeline + SQLite document store
+- [ ] **Day 3** — BM25 ranking alongside TF-IDF
+- [ ] **Day 4** — Persistent index save/load + document metadata
+- [ ] **Day 5** — Answer reranking + better snippet extraction
+- [ ] **Day 6** — Evaluation harness with sample Q&A set and hit-rate metrics
+- [ ] **Day 7** — Cleanup, docs, v0.1 release notes
+
+## Week 2 — API + web app
+
+- [ ] **Day 8** — REST API server for ingest / search / ask
+- [ ] **Day 9** — Document management endpoints (list / delete / reindex)
+- [ ] **Day 10** — QA endpoint with source citations
+- [ ] **Day 11** — Web UI: upload + ask page
+- [ ] **Day 12** — UI polish: sources panel, history
+- [ ] **Day 13** — Error handling + input validation pass
+- [ ] **Day 14** — Integration tests + v0.2 release notes
+
+## Week 3 — Polish + ship
+
+- [ ] **Day 15** — Config file + structured logging
+- [ ] **Day 16** — Dockerfile + docker-compose
+- [ ] **Day 17** — GitHub Actions CI running the tests
+- [ ] **Day 18** — Index caching + performance pass
+- [ ] **Day 19** — README polish with screenshots / demo output
+- [ ] **Day 20** — Final evaluation run, results documented
+- [ ] **Day 21** — v1.0 release notes + RESUME.md with resume bullet points
+      and project description
