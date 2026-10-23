@@ -15,6 +15,7 @@ env/
 
 # DocuMind runtime artefacts
 index.json
+documind.db
 
 # Editors / OS
 .idea/
