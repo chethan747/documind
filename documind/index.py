@@ -31,6 +31,27 @@ class Index:
         self._dirty = True
         return len(pieces)
 
+    def remove_document(self, doc_id):
+        """Drop every chunk (and vector) belonging to ``doc_id``.
+
+        Used by the ingestion pipeline so re-ingesting a changed file does
+        not leave stale chunks behind. Returns the number of chunks removed.
+        """
+        if self._dirty:
+            # _vectors must stay parallel to chunks before filtering
+            self.build()
+        before = len(self.chunks)
+        if before == 0:
+            return 0
+        keep = [(c, v) for c, v in zip(self.chunks, self._vectors)
+                if c["doc_id"] != doc_id]
+        self.chunks = [c for c, _ in keep]
+        self._vectors = [v for _, v in keep]
+        removed = before - len(self.chunks)
+        if removed:
+            self._dirty = True
+        return removed
+
     def build(self):
         """(Re)fit the TF-IDF vectoriser over all stored chunks."""
         if self.chunks:
