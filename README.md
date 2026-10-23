@@ -20,30 +20,38 @@ easy to study.
 - [x] Extractive question answering with `[source]` citations
 - [x] CLI: `ingest`, `ask` and `demo` commands; index persisted to JSON
 - [x] Unit test suite covering chunking, retrieval ranking and QA
+- [x] Document ingestion pipeline: recursive discovery, text extraction
+      (.txt/.md/.html), SHA-256 dedup, unchanged/duplicate/empty handling
+- [x] SQLite document store: document records, metadata, chunk counts,
+      upsert on re-ingest, content-hash lookup
+- [x] CLI: `list` and `stats` commands over the document store
 
 **Roadmap** — see [ROADMAP.md](ROADMAP.md) for the full 21-day plan:
-SQLite document store, BM25 ranking, evaluation harness, REST API, web UI,
+BM25 ranking, evaluation harness, REST API, web UI,
 Docker packaging, CI, and a v1.0 release.
 
 ## Architecture
 
 ```
-documents (.txt/.md)
+documents (.txt/.md/.html)
         │
         ▼
-  chunker.py ── overlapping sentence-aware chunks
-        │
-        ▼
-  embeddings.py ── TF-IDF vectors (sparse, L2-normalised)
-        │
-        ▼
-  index.py ── chunk store + cosine-similarity top-k search
-        │
-        ▼
-  qa.py ── extractive answer composer with [source] citations
-        │
-        ▼
-  cli.py ── ingest / ask / demo
+  ingest.py ── discovery → extraction → registration (with IngestStats)
+        │                        │
+        ▼                        ▼
+  store.py (SQLite)        chunker.py ── overlapping sentence-aware chunks
+  doc records, metadata           │
+  dedup by content hash           ▼
+                           embeddings.py ── TF-IDF vectors (sparse, L2-norm)
+                                  │
+                                  ▼
+                           index.py ── chunk store + cosine-similarity top-k
+                                  │
+                                  ▼
+                           qa.py ── extractive answers with [source] citations
+                                  │
+                                  ▼
+                           cli.py ── ingest / ask / list / stats / demo
 ```
 
 ## Quickstart
@@ -57,8 +65,12 @@ python3 -m unittest discover -s tests
 # end-to-end demo over the sample documents in ./data
 python3 cli.py demo
 
-# index your own documents (any folder of .txt/.md files)
+# index your own documents (any folder of .txt/.md/.html files)
 python3 cli.py ingest /path/to/docs
+
+# see what is stored
+python3 cli.py list
+python3 cli.py stats
 
 # ask questions against the saved index
 python3 cli.py ask "What is AEM built on?"
@@ -80,7 +92,7 @@ python3 cli.py ask "What is AEM built on?"
 ## Layout
 
 ```
-documind/     core package: chunker, embeddings, index, qa
+documind/     core package: chunker, embeddings, index, qa, ingest, store
 cli.py        command-line interface
 data/         sample documents the demo runs on
 tests/        unittest suite
