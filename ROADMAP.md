@@ -9,7 +9,7 @@ Intelligence Platform by Day 21.
 - [x] **Day 1** — Project scaffold, overlapping chunker, TF-IDF vectoriser
       from scratch, cosine-similarity index, extractive QA with citations,
       CLI (ingest / ask / demo), unit tests
-- [ ] **Day 2** — Document ingestion pipeline + SQLite document store
+- [x] **Day 2** — Document ingestion pipeline + SQLite document store
 - [ ] **Day 3** — BM25 ranking alongside TF-IDF
 - [ ] **Day 4** — Persistent index save/load + document metadata
 - [ ] **Day 5** — Answer reranking + better snippet extraction
