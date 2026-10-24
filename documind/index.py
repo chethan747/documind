@@ -1,14 +1,19 @@
 """The DocuMind index: stores document chunks and searches them.
 
 Documents are chunked on the way in; a TF-IDF vectoriser is fitted over all
-chunks; a query is vectorised with the same vocabulary and ranked against
-every chunk by cosine similarity. The whole index serialises to JSON so the
-CLI can persist it between runs.
+chunks and a BM25 scorer over the same chunks (Day 3). A query can be
+ranked by TF-IDF cosine similarity (the default, unchanged from Day 1),
+by BM25, or by a normalised combination of both. The whole index
+serialises to JSON so the CLI can persist it between runs.
 """
 import json
 
+from .bm25 import BM25Scorer
 from .chunker import chunk_text
 from .embeddings import TfidfVectorizer, cosine_similarity
+
+# Ranking methods accepted by Index.search / qa.answer_question.
+SEARCH_METHODS = ("tfidf", "bm25", "combined")
 
 
 class Index:
@@ -17,6 +22,7 @@ class Index:
         self.overlap = overlap
         self.chunks = []        # [{"doc_id", "chunk_index", "text"}]
         self.vectorizer = TfidfVectorizer()
+        self.bm25 = BM25Scorer()
         self._vectors = []      # parallel to self.chunks
         self._dirty = True
 
@@ -53,27 +59,58 @@ class Index:
         return removed
 
     def build(self):
-        """(Re)fit the TF-IDF vectoriser over all stored chunks."""
+        """(Re)fit the TF-IDF vectoriser and BM25 scorer over all chunks."""
         if self.chunks:
-            self._vectors = self.vectorizer.fit_transform(
-                [c["text"] for c in self.chunks])
+            texts = [c["text"] for c in self.chunks]
+            self._vectors = self.vectorizer.fit_transform(texts)
+            self.bm25.fit(texts)
         else:
             self._vectors = []
+            self.bm25.fit([])
         self._dirty = False
 
     # -- retrieval -------------------------------------------------------
-    def search(self, query, k=5):
-        """Return the top-k chunks for ``query`` with cosine scores."""
+    def search(self, query, k=5, method="tfidf"):
+        """Return the top-k chunks for ``query``.
+
+        ``method`` is ``"tfidf"`` (cosine similarity, the Day 1 default),
+        ``"bm25"`` (BM25 score), or ``"combined"`` (the mean of the two
+        scores after each is normalised by its own top score, so the two
+        scales are comparable). Raises ValueError for an unknown method.
+        """
+        if method not in SEARCH_METHODS:
+            raise ValueError("unknown search method %r (expected one of %s)"
+                             % (method, ", ".join(SEARCH_METHODS)))
         if self._dirty:
             self.build()
         if not self.chunks:
             return []
-        qvec = self.vectorizer.transform(query)
-        if not qvec:
-            return []
+        tfidf_scores = None
+        bm25_scores = None
+        if method in ("tfidf", "combined"):
+            qvec = self.vectorizer.transform(query)
+            if qvec:
+                tfidf_scores = [cosine_similarity(qvec, vec)
+                                for vec in self._vectors]
+        if method in ("bm25", "combined"):
+            bm25_scores = self.bm25.score_all(query)
+        if method == "combined":
+            if tfidf_scores is None and bm25_scores is None:
+                return []
+            tfidf_scores = tfidf_scores or [0.0] * len(self.chunks)
+            bm25_scores = bm25_scores or [0.0] * len(self.chunks)
+            tfidf_max = max(tfidf_scores) or 1.0
+            bm25_max = max(bm25_scores) or 1.0
+            scores = [0.5 * (t / tfidf_max) + 0.5 * (b / bm25_max)
+                      for t, b in zip(tfidf_scores, bm25_scores)]
+        elif method == "tfidf":
+            if tfidf_scores is None:
+                return []
+            scores = tfidf_scores
+        else:  # bm25
+            scores = bm25_scores
         scored = []
-        for chunk, vec in zip(self.chunks, self._vectors):
-            score = cosine_similarity(qvec, vec)
+        for chunk, score in zip(self.chunks, scores):
             if score > 0.0:
                 scored.append({**chunk, "score": round(score, 4)})
         scored.sort(key=lambda r: r["score"], reverse=True)
@@ -87,7 +124,8 @@ class Index:
                 "overlap": self.overlap,
                 "chunks": self.chunks,
                 "vectorizer": self.vectorizer.to_dict(),
-                "vectors": self._vectors}
+                "vectors": self._vectors,
+                "bm25": self.bm25.to_dict()}
 
     @classmethod
     def from_dict(cls, data):
@@ -95,7 +133,12 @@ class Index:
         idx.chunks = data["chunks"]
         idx.vectorizer = TfidfVectorizer.from_dict(data["vectorizer"])
         idx._vectors = data["vectors"]
-        idx._dirty = False
+        if "bm25" in data:
+            idx.bm25 = BM25Scorer.from_dict(data["bm25"])
+            idx._dirty = False
+        else:
+            # Indexes saved before Day 3 have no BM25 state; refit on use.
+            idx._dirty = True
         return idx
 
     def save(self, path):
