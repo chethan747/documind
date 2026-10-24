@@ -16,13 +16,16 @@ def _sentence_score(question_terms, sentence):
     return len(question_terms & terms) / len(question_terms) if question_terms else 0.0
 
 
-def answer_question(index, question, k=3):
+def answer_question(index, question, k=3, method="tfidf"):
     """Answer ``question`` from ``index`` with cited sources.
+
+    ``method`` is passed through to ``index.search``: ``"tfidf"``
+    (default), ``"bm25"`` or ``"combined"``.
 
     Returns {"answer": str, "sources": [{"doc_id", "chunk_index", "score"}]}.
     When nothing relevant is found, the answer says so plainly.
     """
-    hits = index.search(question, k=k)
+    hits = index.search(question, k=k, method=method)
     if not hits:
         return {"answer": "I could not find anything relevant in the "
                           "indexed documents.",
