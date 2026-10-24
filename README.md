@@ -25,6 +25,9 @@ easy to study.
 - [x] SQLite document store: document records, metadata, chunk counts,
       upsert on re-ingest, content-hash lookup
 - [x] CLI: `list` and `stats` commands over the document store
+- [x] BM25 ranking alongside TF-IDF (term-frequency saturation, length
+      normalisation, `tfidf` / `bm25` / `combined` search methods;
+      `cli.py ask --method bm25`); TF-IDF remains the default
 
 **Roadmap** — see [ROADMAP.md](ROADMAP.md) for the full 21-day plan:
 BM25 ranking, evaluation harness, REST API, web UI,
@@ -43,9 +46,10 @@ documents (.txt/.md/.html)
   doc records, metadata           │
   dedup by content hash           ▼
                            embeddings.py ── TF-IDF vectors (sparse, L2-norm)
+                           bm25.py ── BM25 scorer (k1/b, length norm)
                                   │
                                   ▼
-                           index.py ── chunk store + cosine-similarity top-k
+                           index.py ── chunk store + tfidf / bm25 / combined top-k
                                   │
                                   ▼
                            qa.py ── extractive answers with [source] citations
@@ -82,6 +86,9 @@ python3 cli.py ask "What is AEM built on?"
   RAG, not to hide them behind a framework.
 - **TF-IDF retrieval from scratch** — smoothed idf, term-frequency weighting,
   L2-normalised sparse vectors, so cosine similarity is a plain dot product.
+- **BM25 ranking from scratch** — Robertson/Sparck-Jones idf, saturating
+  term frequency (k1=1.5) and length normalisation (b=0.75); searchable
+  alone or combined (mean of per-method normalised scores) with TF-IDF.
 - **Extractive answers with citations** — answers quote the retrieved
   sentences verbatim and cite their source document, so every claim can be
   traced back. (A generative LLM layer is a natural extension; the retrieval
@@ -92,7 +99,7 @@ python3 cli.py ask "What is AEM built on?"
 ## Layout
 
 ```
-documind/     core package: chunker, embeddings, index, qa, ingest, store
+documind/     core package: chunker, embeddings, bm25, index, qa, ingest, store
 cli.py        command-line interface
 data/         sample documents the demo runs on
 tests/        unittest suite
