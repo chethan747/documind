@@ -7,7 +7,8 @@ Usage:
                                        ingestion pipeline and persist the
                                        index to index.json and the document
                                        records to documind.db.
-    python3 cli.py ask "<question>"    Answer a question from the saved index.
+    python3 cli.py ask "<question>" [--method tfidf|bm25|combined]
+                                       Answer a question from the saved index.
     python3 cli.py list                List every document in the store.
     python3 cli.py stats               Show document/index statistics.
     python3 cli.py demo                Ingest ./data and ask sample questions.
@@ -96,7 +97,12 @@ def cmd_ask(args):
         print("error: no index found — run `ingest` first", file=sys.stderr)
         return 1
     index = Index.load(INDEX_PATH)
-    print_answer(args.question, answer_question(index, args.question))
+    try:
+        result = answer_question(index, args.question, method=args.method)
+    except ValueError as exc:
+        print("error: %s" % exc, file=sys.stderr)
+        return 1
+    print_answer(args.question, result)
     return 0
 
 
@@ -167,6 +173,9 @@ def main(argv=None):
 
     p_ask = sub.add_parser("ask", help="ask a question over the index")
     p_ask.add_argument("question")
+    p_ask.add_argument("--method", default="tfidf",
+                       choices=["tfidf", "bm25", "combined"],
+                       help="ranking method (default: tfidf)")
     p_ask.set_defaults(func=cmd_ask)
 
     p_list = sub.add_parser("list", help="list stored documents")
