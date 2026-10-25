@@ -28,6 +28,11 @@ easy to study.
 - [x] BM25 ranking alongside TF-IDF (term-frequency saturation, length
       normalisation, `tfidf` / `bm25` / `combined` search methods;
       `cli.py ask --method bm25`); TF-IDF remains the default
+- [x] Persistent index save/load with document metadata (Day 4): the
+      saved index is versioned and validated on load, carries each
+      document's title/source path, and survives a round-trip with
+      identical rankings; pre-Day-4 saves still load; search and QA
+      results report document titles, not just ids
 
 **Roadmap** — see [ROADMAP.md](ROADMAP.md) for the full 21-day plan:
 BM25 ranking, evaluation harness, REST API, web UI,
