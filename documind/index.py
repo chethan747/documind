@@ -4,7 +4,11 @@ Documents are chunked on the way in; a TF-IDF vectoriser is fitted over all
 chunks and a BM25 scorer over the same chunks (Day 3). A query can be
 ranked by TF-IDF cosine similarity (the default, unchanged from Day 1),
 by BM25, or by a normalised combination of both. The whole index
-serialises to JSON so the CLI can persist it between runs.
+serialises to JSON so the CLI can persist it between runs, together with
+per-document metadata (Day 4: title, source path, ...) so a loaded index
+alone can report where each hit came from. The saved format is versioned
+and validated on load, so a corrupt or newer file fails with a clear
+error instead of a cryptic one.
 """
 import json
 
@@ -15,25 +19,38 @@ from .embeddings import TfidfVectorizer, cosine_similarity
 # Ranking methods accepted by Index.search / qa.answer_question.
 SEARCH_METHODS = ("tfidf", "bm25", "combined")
 
+# Saved-index format version. Version 1 (Days 1-3) had no version field and
+# no per-document metadata; version 2 adds both. Older files still load.
+INDEX_FORMAT_VERSION = 2
+
 
 class Index:
     def __init__(self, chunk_size=500, overlap=80):
         self.chunk_size = chunk_size
         self.overlap = overlap
         self.chunks = []        # [{"doc_id", "chunk_index", "text"}]
+        self.documents = {}     # doc_id -> metadata dict (title, source_path, ...)
         self.vectorizer = TfidfVectorizer()
         self.bm25 = BM25Scorer()
         self._vectors = []      # parallel to self.chunks
         self._dirty = True
 
     # -- ingestion -------------------------------------------------------
-    def add_document(self, doc_id, text):
-        """Chunk ``text`` and add the pieces under ``doc_id``."""
+    def add_document(self, doc_id, text, metadata=None):
+        """Chunk ``text`` and add the pieces under ``doc_id``.
+
+        ``metadata`` (e.g. title, source path) is stored per document and
+        travels with the saved index, so search hits can report where they
+        came from without the document store. Passing None leaves any
+        existing metadata for ``doc_id`` untouched.
+        """
         pieces = chunk_text(text, self.chunk_size, self.overlap)
         for i, piece in enumerate(pieces):
             self.chunks.append({"doc_id": doc_id,
                                 "chunk_index": i,
                                 "text": piece})
+        if metadata is not None:
+            self.documents[doc_id] = dict(metadata)
         self._dirty = True
         return len(pieces)
 
@@ -56,6 +73,7 @@ class Index:
         removed = before - len(self.chunks)
         if removed:
             self._dirty = True
+            self.documents.pop(doc_id, None)
         return removed
 
     def build(self):
@@ -112,7 +130,9 @@ class Index:
         scored = []
         for chunk, score in zip(self.chunks, scores):
             if score > 0.0:
-                scored.append({**chunk, "score": round(score, 4)})
+                scored.append({**chunk, "score": round(score, 4),
+                               "metadata": dict(
+                                   self.documents.get(chunk["doc_id"], {}))})
         scored.sort(key=lambda r: r["score"], reverse=True)
         return scored[:k]
 
@@ -120,17 +140,41 @@ class Index:
     def to_dict(self):
         if self._dirty:
             self.build()
-        return {"chunk_size": self.chunk_size,
+        return {"format_version": INDEX_FORMAT_VERSION,
+                "chunk_size": self.chunk_size,
                 "overlap": self.overlap,
                 "chunks": self.chunks,
+                "documents": self.documents,
                 "vectorizer": self.vectorizer.to_dict(),
                 "vectors": self._vectors,
                 "bm25": self.bm25.to_dict()}
 
     @classmethod
     def from_dict(cls, data):
+        """Rebuild an index from a saved dict.
+
+        Raises ValueError for data that is not a recognisable index
+        (wrong shape, missing keys, or a newer format version), so a
+        corrupt or foreign file fails loudly instead of half-loading.
+        Indexes saved before Day 4 (no version, no documents map, maybe
+        no BM25 state) still load; their metadata defaults to empty and
+        the BM25 scorer refits on first use.
+        """
+        if not isinstance(data, dict):
+            raise ValueError("invalid index data: expected a JSON object")
+        version = data.get("format_version", 1)
+        if version > INDEX_FORMAT_VERSION:
+            raise ValueError(
+                "unsupported index format version %r (this build supports "
+                "up to %d; re-ingest to rebuild the index)"
+                % (version, INDEX_FORMAT_VERSION))
+        for key in ("chunk_size", "overlap", "chunks",
+                    "vectorizer", "vectors"):
+            if key not in data:
+                raise ValueError("invalid index data: missing key %r" % key)
         idx = cls(data["chunk_size"], data["overlap"])
         idx.chunks = data["chunks"]
+        idx.documents = dict(data.get("documents") or {})
         idx.vectorizer = TfidfVectorizer.from_dict(data["vectorizer"])
         idx._vectors = data["vectors"]
         if "bm25" in data:
@@ -147,8 +191,13 @@ class Index:
 
     @classmethod
     def load(cls, path):
-        with open(path, "r", encoding="utf-8") as fh:
-            return cls.from_dict(json.load(fh))
+        try:
+            with open(path, "r", encoding="utf-8") as fh:
+                data = json.load(fh)
+        except json.JSONDecodeError as exc:
+            raise ValueError("corrupt index file %r: not valid JSON (%s)"
+                             % (path, exc)) from exc
+        return cls.from_dict(data)
 
     def __len__(self):
         return len(self.chunks)
