@@ -11,7 +11,7 @@ Intelligence Platform by Day 21.
       CLI (ingest / ask / demo), unit tests
 - [x] **Day 2** — Document ingestion pipeline + SQLite document store
 - [x] **Day 3** — BM25 ranking alongside TF-IDF
-- [ ] **Day 4** — Persistent index save/load + document metadata
+- [x] **Day 4** — Persistent index save/load + document metadata
 - [ ] **Day 5** — Answer reranking + better snippet extraction
 - [ ] **Day 6** — Evaluation harness with sample Q&A set and hit-rate metrics
 - [ ] **Day 7** — Cleanup, docs, v0.1 release notes
