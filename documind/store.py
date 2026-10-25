@@ -3,7 +3,8 @@
 The store is the system of record for *documents*: their source text, where
 they came from, when they were ingested, how many index chunks they produced,
 and arbitrary metadata. The search index (index.py) derives its chunks from
-these records; Day 4 will persist the index itself alongside this metadata.
+these records and carries a copy of each document's metadata so a saved
+index alone can report where its hits came from (Day 4).
 
 Deduplication is by SHA-256 of the extracted text: identical content is only
 stored once, no matter how many files or paths it arrives through.
