@@ -69,7 +69,11 @@ def cmd_ingest(args):
         index = Index()
         # rebuild the index from everything already in the store, then add
         for doc in store.list_documents():
-            index.add_document(doc["doc_id"], doc["content"])
+            metadata = dict(doc["metadata"])
+            metadata.update({"title": doc["title"],
+                             "source_path": doc["source_path"]})
+            index.add_document(doc["doc_id"], doc["content"],
+                               metadata=metadata)
         stats = ingest_folder(store, index, args.folder)
         if stats.documents_added == 0 and stats.documents_updated == 0:
             print("no new %s documents found in %s"
@@ -88,8 +92,9 @@ def print_answer(question, result):
     if result["sources"]:
         print("Sources:")
         for src in result["sources"]:
+            label = src.get("title") or src["doc_id"]
             print("  - %s (chunk %d, score %.4f)"
-                  % (src["doc_id"], src["chunk_index"], src["score"]))
+                  % (label, src["chunk_index"], src["score"]))
 
 
 def cmd_ask(args):
