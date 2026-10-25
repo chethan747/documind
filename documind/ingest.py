@@ -145,7 +145,9 @@ def ingest_file(store, index, path, doc_id=None):
     # drop stale chunks so re-ingesting a changed file stays consistent
     if hasattr(index, "remove_document"):
         index.remove_document(doc_id)
-    num_chunks = index.add_document(doc_id, text)
+    index_metadata = dict(metadata)
+    index_metadata.update({"title": title, "source_path": path})
+    num_chunks = index.add_document(doc_id, text, metadata=index_metadata)
     store.set_num_chunks(doc_id, num_chunks)
 
     return "updated" if existing is not None else "added"
