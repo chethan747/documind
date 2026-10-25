@@ -45,7 +45,13 @@ def answer_question(index, question, k=3, method="tfidf"):
 
     answer = " ".join("%s [%s]" % (sentence, doc_id)
                       for sentence, doc_id in picked)
-    sources = [{"doc_id": h["doc_id"],
-                "chunk_index": h["chunk_index"],
-                "score": h["score"]} for h in hits]
+    sources = []
+    for h in hits:
+        source = {"doc_id": h["doc_id"],
+                  "chunk_index": h["chunk_index"],
+                  "score": h["score"]}
+        title = h.get("metadata", {}).get("title")
+        if title:
+            source["title"] = title
+        sources.append(source)
     return {"answer": answer, "sources": sources}
