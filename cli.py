@@ -8,6 +8,7 @@ Usage:
                                        index to index.json and the document
                                        records to documind.db.
     python3 cli.py ask "<question>" [--method tfidf|bm25|combined]
+                                       [--no-rerank]
                                        Answer a question from the saved index.
     python3 cli.py list                List every document in the store.
     python3 cli.py stats               Show document/index statistics.
@@ -103,7 +104,8 @@ def cmd_ask(args):
         return 1
     index = Index.load(INDEX_PATH)
     try:
-        result = answer_question(index, args.question, method=args.method)
+        result = answer_question(index, args.question, method=args.method,
+                                 rerank=not args.no_rerank)
     except ValueError as exc:
         print("error: %s" % exc, file=sys.stderr)
         return 1
@@ -181,6 +183,9 @@ def main(argv=None):
     p_ask.add_argument("--method", default="tfidf",
                        choices=["tfidf", "bm25", "combined"],
                        help="ranking method (default: tfidf)")
+    p_ask.add_argument("--no-rerank", action="store_true",
+                       help="keep retriever order instead of reranking "
+                            "by best-sentence evidence")
     p_ask.set_defaults(func=cmd_ask)
 
     p_list = sub.add_parser("list", help="list stored documents")
