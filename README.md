@@ -33,6 +33,14 @@ easy to study.
       document's title/source path, and survives a round-trip with
       identical rankings; pre-Day-4 saves still load; search and QA
       results report document titles, not just ids
+- [x] Answer reranking + better snippet extraction (Day 5): top-k chunks
+      are reranked by a second-stage score (half retrieval score, half
+      best-sentence evidence — idf-weighted question-term coverage,
+      sentence density and an exact-phrase bonus); answers quote the
+      best sentence per chunk, plus a neighbouring sentence only when
+      it adds uncovered question terms, with over-long snippets trimmed
+      at a word boundary; QA sources carry the snippet and rerank score,
+      and `cli.py ask --no-rerank` keeps plain retriever order
 
 **Roadmap** — see [ROADMAP.md](ROADMAP.md) for the full 21-day plan:
 BM25 ranking, evaluation harness, REST API, web UI,
@@ -55,6 +63,10 @@ documents (.txt/.md/.html)
                                   │
                                   ▼
                            index.py ── chunk store + tfidf / bm25 / combined top-k
+                                  │
+                                  ▼
+                           rerank.py ── sentence scoring, chunk reranking,
+                                        focused snippet extraction
                                   │
                                   ▼
                            qa.py ── extractive answers with [source] citations
@@ -104,7 +116,8 @@ python3 cli.py ask "What is AEM built on?"
 ## Layout
 
 ```
-documind/     core package: chunker, embeddings, bm25, index, qa, ingest, store
+documind/     core package: chunker, embeddings, bm25, index, rerank,
+              qa, ingest, store
 cli.py        command-line interface
 data/         sample documents the demo runs on
 tests/        unittest suite
