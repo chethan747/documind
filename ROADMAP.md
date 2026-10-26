@@ -12,7 +12,12 @@ Intelligence Platform by Day 21.
 - [x] **Day 2** — Document ingestion pipeline + SQLite document store
 - [x] **Day 3** — BM25 ranking alongside TF-IDF
 - [x] **Day 4** — Persistent index save/load + document metadata
-- [ ] **Day 5** — Answer reranking + better snippet extraction
+- [x] **Day 5** — Answer reranking + better snippet extraction
+      (rerank.py: idf-weighted sentence scoring with phrase bonus and
+      density, chunk reranking combining retrieval + sentence evidence,
+      focused snippets with a context neighbour only when it adds
+      uncovered question terms; qa.py reports snippet + rerank_score;
+      `cli.py ask --no-rerank` keeps retriever order; 19 new tests)
 - [ ] **Day 6** — Evaluation harness with sample Q&A set and hit-rate metrics
 - [ ] **Day 7** — Cleanup, docs, v0.1 release notes
 
