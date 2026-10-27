@@ -18,7 +18,15 @@ Intelligence Platform by Day 21.
       focused snippets with a context neighbour only when it adds
       uncovered question terms; qa.py reports snippet + rerank_score;
       `cli.py ask --no-rerank` keeps retriever order; 19 new tests)
-- [ ] **Day 6** — Evaluation harness with sample Q&A set and hit-rate metrics
+- [x] **Day 6** — Evaluation harness with sample Q&A set and hit-rate metrics
+      (evaluate.py: load_cases, run_evaluation, evaluate_all_methods,
+      format_report; eval/eval_qa.json: 12 questions over data/; hit
+      rate@5, MRR@5, QA citation rate, QA term rate; `cli.py eval`
+      [--method | --all-methods] [--k] [--output]; 14 new tests.
+      Result on the shipped set, all methods: hit rate 1.000, MRR 1.000,
+      QA citation 1.000, QA terms 0.917 — the one term miss is q9
+      (overfitting), whose answer quotes the cross-validation sentence
+      rather than the memorisation definition.)
 - [ ] **Day 7** — Cleanup, docs, v0.1 release notes
 
 ## Week 2 — API + web app
