@@ -13,6 +13,8 @@ Usage:
     python3 cli.py list                List every document in the store.
     python3 cli.py stats               Show document/index statistics.
     python3 cli.py demo                Ingest ./data and ask sample questions.
+    python3 cli.py eval                Score the index on the sample Q&A
+                                       set (hit rate, MRR, QA citations).
 """
 import argparse
 import os
@@ -20,6 +22,8 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+from documind.evaluate import (evaluate_all_methods, format_report,
+                               load_cases, run_evaluation)
 from documind.index import Index
 from documind.ingest import ingest_folder, SUPPORTED_EXTENSIONS
 from documind.qa import answer_question
@@ -157,6 +161,46 @@ def cmd_stats(_args):
     return 0
 
 
+def cmd_eval(args):
+    try:
+        cases = load_cases(args.cases)
+    except (OSError, ValueError) as exc:
+        print("error: %s" % exc, file=sys.stderr)
+        return 1
+    if os.path.exists(INDEX_PATH) and not args.data_dir:
+        index = Index.load(INDEX_PATH)
+    else:
+        # no saved index (or an explicit folder): build one in memory
+        # from the sample documents, so `eval` works on a fresh checkout
+        folder = args.data_dir or os.path.join(BASE_DIR, "data")
+        if not os.path.isdir(folder):
+            print("error: not a folder: %s" % folder, file=sys.stderr)
+            return 1
+        store = DocumentStore()
+        try:
+            index = Index()
+            ingest_folder(store, index, folder)
+        finally:
+            store.close()
+    try:
+        if args.all_methods:
+            reports = evaluate_all_methods(index, cases, k=args.k)
+        else:
+            reports = run_evaluation(index, cases, k=args.k,
+                                     method=args.method)
+    except ValueError as exc:
+        print("error: %s" % exc, file=sys.stderr)
+        return 1
+    print(format_report(reports), end="")
+    if args.output:
+        import json
+        payload = reports if isinstance(reports, list) else [reports]
+        with open(args.output, "w", encoding="utf-8") as fh:
+            json.dump(payload, fh, indent=2)
+        print("evaluation written -> %s" % args.output)
+    return 0
+
+
 def cmd_demo(_args):
     # a fresh in-memory store + index keeps the demo self-contained
     store = DocumentStore()
@@ -196,6 +240,27 @@ def main(argv=None):
 
     p_demo = sub.add_parser("demo", help="ingest ./data and ask samples")
     p_demo.set_defaults(func=cmd_demo)
+
+    p_eval = sub.add_parser(
+        "eval", help="score the index on the sample Q&A set")
+    p_eval.add_argument("--cases", default=os.path.join(BASE_DIR, "eval",
+                                                        "eval_qa.json"),
+                        help="evaluation Q&A JSON file "
+                             "(default: eval/eval_qa.json)")
+    p_eval.add_argument("--k", type=int, default=5,
+                        help="retrieval cutoff (default: 5)")
+    p_eval.add_argument("--method", default="tfidf",
+                        choices=["tfidf", "bm25", "combined"],
+                        help="ranking method (default: tfidf)")
+    p_eval.add_argument("--all-methods", action="store_true",
+                        help="score tfidf, bm25 and combined side by side")
+    p_eval.add_argument("--data-dir",
+                        help="index this folder instead of the saved "
+                             "index (default: saved index if present, "
+                             "else ./data)")
+    p_eval.add_argument("--output",
+                        help="write the report as JSON to this file")
+    p_eval.set_defaults(func=cmd_eval)
 
     args = parser.parse_args(argv)
     return args.func(args)
