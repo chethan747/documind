@@ -41,9 +41,17 @@ easy to study.
       it adds uncovered question terms, with over-long snippets trimmed
       at a word boundary; QA sources carry the snippet and rerank score,
       and `cli.py ask --no-rerank` keeps plain retriever order
+- [x] Evaluation harness (Day 6): a 12-question sample set in
+      `eval/eval_qa.json` (grounded in the sample documents, with the
+      expected source document and answer terms per question) scored by
+      `documind/evaluate.py` — hit rate@k, MRR@k, QA citation rate and
+      QA term rate, per ranking method or side by side via
+      `cli.py eval [--all-methods] [--k N] [--output report.json]`.
+      On the shipped set all three methods score hit rate 1.000,
+      MRR 1.000, QA citation 1.000 and QA terms 0.917
 
 **Roadmap** — see [ROADMAP.md](ROADMAP.md) for the full 21-day plan:
-BM25 ranking, evaluation harness, REST API, web UI,
+BM25 ranking and evaluation harness are done; next are REST API, web UI,
 Docker packaging, CI, and a v1.0 release.
 
 ## Architecture
@@ -72,7 +80,11 @@ documents (.txt/.md/.html)
                            qa.py ── extractive answers with [source] citations
                                   │
                                   ▼
-                           cli.py ── ingest / ask / list / stats / demo
+                           evaluate.py ── Q&A harness: hit rate, MRR,
+                                        QA citation / term rates
+                                  │
+                                  ▼
+                           cli.py ── ingest / ask / list / stats / demo / eval
 ```
 
 ## Quickstart
@@ -95,6 +107,9 @@ python3 cli.py stats
 
 # ask questions against the saved index
 python3 cli.py ask "What is AEM built on?"
+
+# score the pipeline on the sample Q&A set (all ranking methods)
+python3 cli.py eval --all-methods
 ```
 
 ## Tech notes
@@ -117,9 +132,10 @@ python3 cli.py ask "What is AEM built on?"
 
 ```
 documind/     core package: chunker, embeddings, bm25, index, rerank,
-              qa, ingest, store
+              qa, ingest, store, evaluate
 cli.py        command-line interface
 data/         sample documents the demo runs on
+eval/         sample Q&A set for the evaluation harness
 tests/        unittest suite
 ROADMAP.md    the 21-day build plan
 ```
