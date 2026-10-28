@@ -22,6 +22,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+from documind import __version__
 from documind.evaluate import (evaluate_all_methods, format_report,
                                load_cases, run_evaluation)
 from documind.index import Index
@@ -216,6 +217,8 @@ def cmd_demo(_args):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(prog="documind", description=__doc__)
+    parser.add_argument("--version", action="version",
+                        version="documind %s" % __version__)
     sub = parser.add_subparsers(dest="command", required=True)
 
     p_ingest = sub.add_parser("ingest", help="index a folder of documents")
