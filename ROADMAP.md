@@ -27,7 +27,12 @@ Intelligence Platform by Day 21.
       QA citation 1.000, QA terms 0.917 — the one term miss is q9
       (overfitting), whose answer quotes the cross-validation sentence
       rather than the memorisation definition.)
-- [ ] **Day 7** — Cleanup, docs, v0.1 release notes
+- [x] **Day 7** — Cleanup, docs, v0.1 release notes
+      (CHANGELOG.md with v0.1.0 notes and the verified evaluation
+      table; `cli.py --version` reporting documind 0.1.0; README
+      roadmap/layout updated to the released state; cleanup pass
+      confirmed no TODO/FIXME markers, no unused imports, all modules
+      compile; 5 new release tests, suite now 107 tests)
 
 ## Week 2 — API + web app
 
