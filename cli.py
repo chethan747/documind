@@ -12,6 +12,9 @@ Usage:
                                        Answer a question from the saved index.
     python3 cli.py list                List every document in the store.
     python3 cli.py stats               Show document/index statistics.
+    python3 cli.py serve [--host] [--port]
+                                       Start the REST API server
+                                       (ingest / search / ask over HTTP).
     python3 cli.py demo                Ingest ./data and ask sample questions.
     python3 cli.py eval                Score the index on the sample Q&A
                                        set (hit rate, MRR, QA citations).
@@ -28,6 +31,7 @@ from documind.evaluate import (evaluate_all_methods, format_report,
 from documind.index import Index
 from documind.ingest import ingest_folder, SUPPORTED_EXTENSIONS
 from documind.qa import answer_question
+from documind.server import DEFAULT_HOST, DEFAULT_PORT, serve
 from documind.store import DocumentStore
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -202,6 +206,10 @@ def cmd_eval(args):
     return 0
 
 
+def cmd_serve(args):
+    return serve(BASE_DIR, args.host, args.port)
+
+
 def cmd_demo(_args):
     # a fresh in-memory store + index keeps the demo self-contained
     store = DocumentStore()
@@ -240,6 +248,13 @@ def main(argv=None):
 
     p_stats = sub.add_parser("stats", help="show document/index statistics")
     p_stats.set_defaults(func=cmd_stats)
+
+    p_serve = sub.add_parser("serve", help="start the REST API server")
+    p_serve.add_argument("--host", default=DEFAULT_HOST,
+                         help="bind address (default: %s)" % DEFAULT_HOST)
+    p_serve.add_argument("--port", type=int, default=DEFAULT_PORT,
+                         help="port (default: %d)" % DEFAULT_PORT)
+    p_serve.set_defaults(func=cmd_serve)
 
     p_demo = sub.add_parser("demo", help="ingest ./data and ask samples")
     p_demo.set_defaults(func=cmd_demo)
