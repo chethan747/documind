@@ -4,6 +4,16 @@ All notable changes to DocuMind are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version numbers
 follow [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- REST API server (`documind/server.py`, `cli.py serve`): standard-library
+  `ThreadingHTTPServer` exposing `GET /health`, `GET /stats`,
+  `GET /search`, `POST /ingest` and `POST /ask` over the same store and
+  index the CLI uses, with the file pipeline's dedup rules on ingest and
+  cited extractive answers on ask. Documented in the README.
+
 ## [0.1.0] — 2026-10-28 — Core engine (Week 1 complete)
 
 The first releasable DocuMind: a complete, tested retrieval pipeline that
