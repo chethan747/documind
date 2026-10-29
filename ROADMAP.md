@@ -36,7 +36,15 @@ Intelligence Platform by Day 21.
 
 ## Week 2 — API + web app
 
-- [ ] **Day 8** — REST API server for ingest / search / ask
+- [x] **Day 8** — REST API server for ingest / search / ask
+      (server.py: stdlib ThreadingHTTPServer, `cli.py serve` /
+      `python3 -m documind.server`; GET /health, /stats,
+      /search?query&k&method, POST /ingest with the file pipeline's
+      dedup rules, POST /ask with citations; 400/404/405/409 handling;
+      single lock serialising store+index access across threads,
+      DocumentStore gains a check_same_thread option for it; 15 new
+      tests driving a real server over HTTP, suite now 122 tests.
+      Live demo verified: health, search, cited ask, ingest 201, stats.)
 - [ ] **Day 9** — Document management endpoints (list / delete / reindex)
 - [ ] **Day 10** — QA endpoint with source citations
 - [ ] **Day 11** — Web UI: upload + ask page
