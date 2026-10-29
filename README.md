@@ -111,7 +111,26 @@ python3 cli.py ask "What is AEM built on?"
 
 # score the pipeline on the sample Q&A set (all ranking methods)
 python3 cli.py eval --all-methods
+
+# start the REST API server (default: http://127.0.0.1:8000)
+python3 cli.py serve
 ```
+
+## REST API
+
+Standard library only — no framework, no dependencies. All endpoints
+speak JSON; the server loads the saved `index.json` / `documind.db`
+when present, otherwise it rebuilds the index from the document store.
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| GET | `/health` | status, version, document/chunk counts |
+| GET | `/stats` | document/chunk counts, index presence |
+| POST | `/ingest` | `{"doc_id"?, "title"?, "text"}` — add/update one document (201 on add, 200 on update/unchanged, 409 on duplicate content) |
+| GET | `/search?query=...&k=5&method=tfidf\|bm25\|combined` | top-k retrieval hits |
+| POST | `/ask` | `{"question"[, "k"][, "method"][, "rerank"]}` — extractive answer with source citations |
+
+Bad input returns 400, unknown paths 404, wrong-method calls 405.
 
 ## Tech notes
 
@@ -133,7 +152,7 @@ python3 cli.py eval --all-methods
 
 ```
 documind/     core package: chunker, embeddings, bm25, index, rerank,
-              qa, ingest, store, evaluate
+              qa, ingest, store, evaluate, server (REST API)
 cli.py        command-line interface
 data/         sample documents the demo runs on
 eval/         sample Q&A set for the evaluation harness
