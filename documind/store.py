@@ -41,9 +41,10 @@ def utcnow_iso():
 class DocumentStore:
     """A small SQLite-backed registry of ingested documents."""
 
-    def __init__(self, path=":memory:"):
+    def __init__(self, path=":memory:", check_same_thread=True):
         self.path = path
-        self.conn = sqlite3.connect(path)
+        self.conn = sqlite3.connect(path,
+                                    check_same_thread=check_same_thread)
         self.conn.row_factory = sqlite3.Row
         self.conn.executescript(SCHEMA)
 
