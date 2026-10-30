@@ -45,7 +45,15 @@ Intelligence Platform by Day 21.
       DocumentStore gains a check_same_thread option for it; 15 new
       tests driving a real server over HTTP, suite now 122 tests.
       Live demo verified: health, search, cited ask, ingest 201, stats.)
-- [ ] **Day 9** — Document management endpoints (list / delete / reindex)
+- [x] **Day 9** — Document management endpoints (list / delete / reindex)
+      (server.py: GET /documents summaries without full text, GET
+      /documents/<doc_id> with text, DELETE /documents/<doc_id> removing
+      from store and index then persisting (404 when unknown, repeat
+      delete 404), POST /reindex rebuilding the index from the store as
+      system of record and re-persisting it; wrong-method 405s;
+      10 new tests in tests/test_management.py, suite now 132 tests.
+      Live demo verified: list 3, get 200, delete ml-basics.md,
+      list 2, reindex 2 documents / 9 chunks.)
 - [ ] **Day 10** — QA endpoint with source citations
 - [ ] **Day 11** — Web UI: upload + ask page
 - [ ] **Day 12** — UI polish: sources panel, history
