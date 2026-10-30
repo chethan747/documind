@@ -17,6 +17,14 @@ Endpoints (all JSON in, JSON out):
     POST /ask                    {"question"[, "k"][, "method"]
                                  [, "rerank"]} — extractive answer with
                                  source citations, same as ``cli.py ask``
+    GET  /documents               list stored documents (summary only,
+                                 no full text)
+    GET  /documents/<doc_id>      one stored document, with its text
+    DELETE /documents/<doc_id>    remove a document from the store and
+                                 the index (404 when unknown)
+    POST /reindex                 rebuild the whole index from the
+                                 document store, discarding any drift
+                                 between the two
 
 Status codes: 200 on success (201 when /ingest adds a new document),
 400 for missing/invalid input, 404 for unknown paths, 405 for a known
@@ -34,7 +42,7 @@ import os
 import re
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, unquote, urlparse
 
 from . import __version__
 from .index import SEARCH_METHODS, Index
@@ -51,6 +59,23 @@ def _slug(text):
     """Turn a title into a URL/document friendly slug."""
     slug = re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")
     return slug or "document"
+
+
+def _index_metadata(doc):
+    """Metadata the index carries for one stored document row."""
+    metadata = dict(doc["metadata"])
+    metadata.update({"title": doc["title"],
+                     "source_path": doc["source_path"]})
+    return metadata
+
+
+def _doc_summary(doc):
+    """Public summary of a stored document — no full text."""
+    return {"doc_id": doc["doc_id"], "title": doc["title"],
+            "source_path": doc["source_path"],
+            "num_chunks": doc["num_chunks"],
+            "ingested_at": doc["ingested_at"],
+            "metadata": doc["metadata"]}
 
 
 class DocuMindApp:
@@ -78,11 +103,8 @@ class DocuMindApp:
             return Index.load(self.index_path)
         index = Index()
         for doc in self.store.list_documents():
-            metadata = dict(doc["metadata"])
-            metadata.update({"title": doc["title"],
-                             "source_path": doc["source_path"]})
             index.add_document(doc["doc_id"], doc["content"],
-                               metadata=metadata)
+                               metadata=_index_metadata(doc))
         return index
 
     def close(self):
@@ -166,6 +188,59 @@ class DocuMindApp:
                      "answer": result["answer"],
                      "sources": result["sources"]}
 
+    # -- document management (Day 9) -----------------------------------
+    def list_documents(self):
+        """Return (status, payload) listing stored document summaries."""
+        docs = self.store.list_documents()
+        return 200, {"documents": [_doc_summary(d) for d in docs],
+                     "count": len(docs)}
+
+    def get_document(self, doc_id):
+        """Return (status, payload) for one document, with its text."""
+        doc = self.store.get_document(doc_id)
+        if doc is None:
+            return 404, {"error": "unknown document %r" % doc_id}
+        payload = _doc_summary(doc)
+        payload["content"] = doc["content"]
+        return 200, payload
+
+    def delete_document(self, doc_id):
+        """Remove ``doc_id`` from the store and the index, then persist.
+
+        Returns 404 and touches nothing when the id is unknown, so a
+        repeated delete is visibly a no-op rather than a silent success.
+        """
+        if self.store.get_document(doc_id) is None:
+            return 404, {"error": "unknown document %r" % doc_id}
+        removed = self.index.remove_document(doc_id)
+        self.store.delete_document(doc_id)
+        self.index.save(self.index_path)
+        return 200, {"outcome": "deleted", "doc_id": doc_id,
+                     "chunks_removed": removed}
+
+    def reindex(self):
+        """Rebuild the index from scratch from the document store.
+
+        The store is the system of record, so this discards any drift
+        (stale chunks, a missing document, a corrupt saved index that
+        was bypassed) and re-persists the rebuilt index. Chunk size and
+        overlap are kept from the current index.
+        """
+        previous_chunks = len(self.index)
+        index = Index(self.index.chunk_size, self.index.overlap)
+        docs = self.store.list_documents()
+        for doc in docs:
+            num_chunks = index.add_document(
+                doc["doc_id"], doc["content"],
+                metadata=_index_metadata(doc))
+            self.store.set_num_chunks(doc["doc_id"], num_chunks)
+        self.index = index
+        self.index.save(self.index_path)
+        return 200, {"outcome": "reindexed",
+                     "documents": len(docs),
+                     "chunks": len(self.index),
+                     "previous_chunks": previous_chunks}
+
 
 def _parse_int(value, name, default):
     """Parse a query-string integer, raising ValueError on bad input."""
@@ -218,6 +293,17 @@ def make_handler(app):
             return value.strip()
 
         # -- routing ---------------------------------------------------
+        def _doc_path_parts(self, parsed):
+            """Split /documents[/<id>] into parts, or None if not one."""
+            path = parsed.path.rstrip("/") or "/"
+            if path == "/documents":
+                return ["documents"]
+            if path.startswith("/documents/"):
+                doc_id = unquote(path[len("/documents/"):])
+                if doc_id and "/" not in doc_id:
+                    return ["documents", doc_id]
+            return None
+
         def do_GET(self):
             parsed = urlparse(self.path)
             if parsed.path == "/health":
@@ -226,6 +312,14 @@ def make_handler(app):
             elif parsed.path == "/stats":
                 with app.lock:
                     self._send(200, app.stats())
+            elif self._doc_path_parts(parsed) is not None:
+                parts = self._doc_path_parts(parsed)
+                with app.lock:
+                    if len(parts) == 1:
+                        status, payload = app.list_documents()
+                    else:
+                        status, payload = app.get_document(parts[1])
+                self._send(status, payload)
             elif parsed.path == "/search":
                 params = parse_qs(parsed.query)
                 try:
@@ -241,15 +335,40 @@ def make_handler(app):
                 with app.lock:
                     status, payload = app.search(query, k=k, method=method)
                 self._send(status, payload)
-            elif parsed.path in ("/ingest", "/ask"):
+            elif parsed.path in ("/ingest", "/ask", "/reindex"):
                 self._send(405, {"error": "%s expects POST" % parsed.path})
+            else:
+                self._send(404, {"error": "unknown path %r" % parsed.path})
+
+        def do_DELETE(self):
+            parsed = urlparse(self.path)
+            parts = self._doc_path_parts(parsed)
+            if parts is not None:
+                if len(parts) == 1:
+                    self._send(405, {"error": "/documents expects GET; "
+                                              "delete one document at a "
+                                              "time via /documents/<doc_id>"})
+                    return
+                with app.lock:
+                    status, payload = app.delete_document(parts[1])
+                self._send(status, payload)
+            elif parsed.path in ("/health", "/stats", "/search",
+                                 "/ingest", "/ask", "/reindex"):
+                self._send(405, {"error": "%s does not support DELETE"
+                                          % parsed.path})
             else:
                 self._send(404, {"error": "unknown path %r" % parsed.path})
 
         def do_POST(self):
             parsed = urlparse(self.path)
+            if parsed.path == "/reindex":
+                with app.lock:
+                    status, payload = app.reindex()
+                self._send(status, payload)
+                return
             if parsed.path not in ("/ingest", "/ask"):
-                if parsed.path in ("/health", "/stats", "/search"):
+                if parsed.path in ("/health", "/stats", "/search") or \
+                        self._doc_path_parts(parsed) is not None:
                     self._send(405, {"error": "%s expects GET" % parsed.path})
                 else:
                     self._send(404, {"error": "unknown path %r"
