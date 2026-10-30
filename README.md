@@ -129,6 +129,10 @@ when present, otherwise it rebuilds the index from the document store.
 | POST | `/ingest` | `{"doc_id"?, "title"?, "text"}` — add/update one document (201 on add, 200 on update/unchanged, 409 on duplicate content) |
 | GET | `/search?query=...&k=5&method=tfidf\|bm25\|combined` | top-k retrieval hits |
 | POST | `/ask` | `{"question"[, "k"][, "method"][, "rerank"]}` — extractive answer with source citations |
+| GET | `/documents` | list stored documents (summary only, no full text) |
+| GET | `/documents/<doc_id>` | one stored document, with its text |
+| DELETE | `/documents/<doc_id>` | remove a document from store and index (404 when unknown) |
+| POST | `/reindex` | rebuild the index from the document store |
 
 Bad input returns 400, unknown paths 404, wrong-method calls 405.
 
