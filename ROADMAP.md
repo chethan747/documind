@@ -54,7 +54,15 @@ Intelligence Platform by Day 21.
       10 new tests in tests/test_management.py, suite now 132 tests.
       Live demo verified: list 3, get 200, delete ml-basics.md,
       list 2, reindex 2 documents / 9 chunks.)
-- [ ] **Day 10** — QA endpoint with source citations
+- [x] **Day 10** — QA endpoint with source citations
+      (server.py: POST /qa as the dedicated QA endpoint — same request
+      shape as /ask, but the response carries structured `citations`
+      (doc_id, title, chunk_index, score, rerank_score when reranking,
+      snippet, readable "[doc_id, chunk N]" label) plus `source_count`;
+      /ask kept as a compatible alias; GET /qa is 405, empty index is
+      a 200 with empty citations; 10 new tests in tests/test_qa.py,
+      suite now 142 tests. Live demo verified: /qa 200 with 3
+      structured citations for "What is AEM built on?")
 - [ ] **Day 11** — Web UI: upload + ask page
 - [ ] **Day 12** — UI polish: sources panel, history
 - [ ] **Day 13** — Error handling + input validation pass
