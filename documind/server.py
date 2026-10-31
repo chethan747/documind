@@ -17,6 +17,13 @@ Endpoints (all JSON in, JSON out):
     POST /ask                    {"question"[, "k"][, "method"]
                                  [, "rerank"]} — extractive answer with
                                  source citations, same as ``cli.py ask``
+    POST /qa                     dedicated question-answering endpoint:
+                                 same request as /ask, but the response
+                                 carries structured ``citations`` (one
+                                 per source, with document title, chunk
+                                 index, scores, snippet and a readable
+                                 citation label) alongside the answer.
+                                 /ask is kept as a compatible alias.
     GET  /documents               list stored documents (summary only,
                                  no full text)
     GET  /documents/<doc_id>      one stored document, with its text
@@ -188,6 +195,45 @@ class DocuMindApp:
                      "answer": result["answer"],
                      "sources": result["sources"]}
 
+    def qa(self, question, k=3, method="tfidf", rerank=True):
+        """Return (status, payload) for the dedicated QA endpoint.
+
+        Same answering pipeline as :meth:`ask`, but the response is
+        built around structured ``citations``: one entry per source
+        chunk, each carrying the document id and title, the chunk
+        index, the retrieval score (plus ``rerank_score`` when
+        reranking is on), the quoted snippet, and a human-readable
+        citation label such as ``"[aem-basics.md, chunk 0]"``. An
+        empty index (or no relevant chunk) is a normal 200 with an
+        empty citation list, not an error — the answer says so
+        plainly, matching the CLI behaviour.
+        """
+        if method not in SEARCH_METHODS:
+            return 400, {"error": "unknown search method %r (expected one "
+                                  "of %s)" % (method, ", ".join(SEARCH_METHODS))}
+        try:
+            result = answer_question(self.index, question, k=k,
+                                     method=method, rerank=rerank)
+        except ValueError as exc:
+            return 400, {"error": str(exc)}
+        citations = []
+        for source in result["sources"]:
+            citation = {"doc_id": source["doc_id"],
+                        "title": source.get("title"),
+                        "chunk_index": source["chunk_index"],
+                        "score": source["score"],
+                        "snippet": source["snippet"],
+                        "citation": "[%s, chunk %d]"
+                                    % (source["doc_id"],
+                                       source["chunk_index"])}
+            if rerank and "rerank_score" in source:
+                citation["rerank_score"] = source["rerank_score"]
+            citations.append(citation)
+        return 200, {"question": question, "method": method,
+                     "rerank": rerank, "answer": result["answer"],
+                     "citations": citations,
+                     "source_count": len(citations)}
+
     # -- document management (Day 9) -----------------------------------
     def list_documents(self):
         """Return (status, payload) listing stored document summaries."""
@@ -335,7 +381,7 @@ def make_handler(app):
                 with app.lock:
                     status, payload = app.search(query, k=k, method=method)
                 self._send(status, payload)
-            elif parsed.path in ("/ingest", "/ask", "/reindex"):
+            elif parsed.path in ("/ingest", "/ask", "/qa", "/reindex"):
                 self._send(405, {"error": "%s expects POST" % parsed.path})
             else:
                 self._send(404, {"error": "unknown path %r" % parsed.path})
@@ -353,7 +399,7 @@ def make_handler(app):
                     status, payload = app.delete_document(parts[1])
                 self._send(status, payload)
             elif parsed.path in ("/health", "/stats", "/search",
-                                 "/ingest", "/ask", "/reindex"):
+                                 "/ingest", "/ask", "/qa", "/reindex"):
                 self._send(405, {"error": "%s does not support DELETE"
                                           % parsed.path})
             else:
@@ -366,7 +412,7 @@ def make_handler(app):
                     status, payload = app.reindex()
                 self._send(status, payload)
                 return
-            if parsed.path not in ("/ingest", "/ask"):
+            if parsed.path not in ("/ingest", "/ask", "/qa"):
                 if parsed.path in ("/health", "/stats", "/search") or \
                         self._doc_path_parts(parsed) is not None:
                     self._send(405, {"error": "%s expects GET" % parsed.path})
@@ -393,7 +439,7 @@ def make_handler(app):
                         status, payload = app.ingest_text(
                             doc_id.strip() if doc_id else None,
                             title.strip() if title else None, text)
-                else:  # /ask
+                else:  # /ask or /qa — same request shape
                     question = self._require_str(data, "question")
                     k = data.get("k", 3)
                     if not isinstance(k, int) or isinstance(k, bool):
@@ -405,9 +451,14 @@ def make_handler(app):
                     if not isinstance(rerank, bool):
                         raise ValueError("rerank must be a boolean")
                     with app.lock:
-                        status, payload = app.ask(question, k=k,
-                                                  method=method,
-                                                  rerank=rerank)
+                        if parsed.path == "/qa":
+                            status, payload = app.qa(question, k=k,
+                                                     method=method,
+                                                     rerank=rerank)
+                        else:
+                            status, payload = app.ask(question, k=k,
+                                                      method=method,
+                                                      rerank=rerank)
             except ValueError as exc:
                 self._send(400, {"error": str(exc)})
                 return
