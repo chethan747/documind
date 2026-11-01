@@ -4,8 +4,11 @@ Pure standard library: ``http.server.ThreadingHTTPServer`` serves the
 search index and document store built by the rest of the package, so the
 API works with no third-party dependencies, exactly like the CLI.
 
-Endpoints (all JSON in, JSON out):
+Endpoints (all JSON in, JSON out, except the web UI page):
 
+    GET  /                       web UI: upload + ask page (Day 11,
+                                 same as /index.html; HTML, not JSON)
+    GET  /index.html             same web UI page
     GET  /health                 {"status": "ok", "version", ...}
     GET  /stats                  document / chunk counts
     POST /ingest                 {"doc_id"?, "title"?, "text"} — add or
@@ -56,6 +59,7 @@ from .index import SEARCH_METHODS, Index
 from .ingest import sha256_text
 from .qa import answer_question
 from .store import DocumentStore
+from .web import HTML_PAGE
 
 DEFAULT_HOST = "127.0.0.1"
 DEFAULT_PORT = 8000
@@ -317,6 +321,14 @@ def make_handler(app):
             self.end_headers()
             self.wfile.write(body)
 
+        def _send_html(self, status, html):
+            body = html.encode("utf-8")
+            self.send_response(status)
+            self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+
         def _read_json(self):
             length = int(self.headers.get("Content-Length") or 0)
             if length > MAX_BODY_BYTES:
@@ -352,7 +364,11 @@ def make_handler(app):
 
         def do_GET(self):
             parsed = urlparse(self.path)
-            if parsed.path == "/health":
+            if parsed.path in ("/", "/index.html"):
+                # Web UI (Day 11): a static page; its forms call the
+                # JSON endpoints below, so no app lock is needed here.
+                self._send_html(200, HTML_PAGE)
+            elif parsed.path == "/health":
                 with app.lock:
                     self._send(200, app.health())
             elif parsed.path == "/stats":
@@ -398,7 +414,8 @@ def make_handler(app):
                 with app.lock:
                     status, payload = app.delete_document(parts[1])
                 self._send(status, payload)
-            elif parsed.path in ("/health", "/stats", "/search",
+            elif parsed.path in ("/", "/index.html",
+                                 "/health", "/stats", "/search",
                                  "/ingest", "/ask", "/qa", "/reindex"):
                 self._send(405, {"error": "%s does not support DELETE"
                                           % parsed.path})
@@ -413,7 +430,8 @@ def make_handler(app):
                 self._send(status, payload)
                 return
             if parsed.path not in ("/ingest", "/ask", "/qa"):
-                if parsed.path in ("/health", "/stats", "/search") or \
+                if parsed.path in ("/", "/index.html",
+                                   "/health", "/stats", "/search") or \
                         self._doc_path_parts(parsed) is not None:
                     self._send(405, {"error": "%s expects GET" % parsed.path})
                 else:
