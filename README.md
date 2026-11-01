@@ -114,6 +114,7 @@ python3 cli.py eval --all-methods
 
 # start the REST API server (default: http://127.0.0.1:8000)
 python3 cli.py serve
+# then open http://127.0.0.1:8000 in a browser for the upload + ask page
 ```
 
 ## REST API
@@ -124,6 +125,7 @@ when present, otherwise it rebuilds the index from the document store.
 
 | Method | Path | Purpose |
 |--------|------|---------|
+| GET | `/` or `/index.html` | web UI: upload + ask page (HTML, not JSON) |
 | GET | `/health` | status, version, document/chunk counts |
 | GET | `/stats` | document/chunk counts, index presence |
 | POST | `/ingest` | `{"doc_id"?, "title"?, "text"}` — add/update one document (201 on add, 200 on update/unchanged, 409 on duplicate content) |
@@ -157,7 +159,7 @@ Bad input returns 400, unknown paths 404, wrong-method calls 405.
 
 ```
 documind/     core package: chunker, embeddings, bm25, index, rerank,
-              qa, ingest, store, evaluate, server (REST API)
+              qa, ingest, store, evaluate, server (REST API), web (UI page)
 cli.py        command-line interface
 data/         sample documents the demo runs on
 eval/         sample Q&A set for the evaluation harness
