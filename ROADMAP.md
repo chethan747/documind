@@ -63,7 +63,14 @@ Intelligence Platform by Day 21.
       a 200 with empty citations; 10 new tests in tests/test_qa.py,
       suite now 142 tests. Live demo verified: /qa 200 with 3
       structured citations for "What is AEM built on?")
-- [ ] **Day 11** — Web UI: upload + ask page
+- [x] **Day 11** — Web UI: upload + ask page
+      (documind/web.py: dependency-free HTML page served at GET / and
+      /index.html, upload form posting to /ingest, ask form posting to
+      /qa with answer + structured citations, index status from
+      /health, user text rendered via textContent so it cannot inject
+      markup; POST / is 405; 6 new tests in tests/test_webui.py,
+      suite now 148 tests. Live demo verified: page served, upload
+      201, cited /qa answer, health 4 documents / 15 chunks.)
 - [ ] **Day 12** — UI polish: sources panel, history
 - [ ] **Day 13** — Error handling + input validation pass
 - [ ] **Day 14** — Integration tests + v0.2 release notes
