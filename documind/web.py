@@ -1,21 +1,28 @@
-"""Web UI for DocuMind (Day 11).
+"""Web UI for DocuMind (Days 11–12).
 
 A single dependency-free HTML page served by the REST API server at
-``GET /`` (and ``GET /index.html``). It has exactly two jobs, matching
-the day's task:
+``GET /`` (and ``GET /index.html``). It has four jobs:
 
 * **Upload** — a form posting a document (optional id/title plus text)
   to ``POST /ingest``, showing the outcome (added / updated /
   unchanged / duplicate) and chunk count.
 * **Ask** — a form posting a question to ``POST /qa``, showing the
   extractive answer and its structured citations.
+* **Sources panel** (Day 12) — a live list of the indexed documents
+  fetched from ``GET /documents`` (title, id, chunk count), refreshed
+  on page load and after every successful upload; clicking a source
+  fetches ``GET /documents/<doc_id>`` and shows its stored text as a
+  preview.
+* **History** (Day 12) — past questions kept in the browser's
+  ``localStorage`` (newest first, capped at 20), each clickable to
+  restore its answer and citations, with a button to clear the lot.
 
 No server-side templating: the page is static HTML with inline CSS and
 a small amount of vanilla JavaScript that talks to the JSON API with
 ``fetch``. User-supplied text is rendered with ``textContent`` (never
-``innerHTML``), so a document or answer can never inject markup into
-the page. Sources panel and question history are Day 12's work and are
-deliberately not in this page.
+as markup), so a document or answer can never inject markup into
+the page — that rule covers the sources panel and history too, since
+both render stored document titles, questions and answers.
 """
 
 HTML_PAGE = """<!DOCTYPE html>
@@ -38,6 +45,9 @@ HTML_PAGE = """<!DOCTYPE html>
   textarea { min-height: 8rem; }
   button { margin-top: 0.75rem; padding: 0.5rem 1.25rem;
            font: inherit; cursor: pointer; }
+  button.linklike { background: none; border: none; padding: 0;
+                    color: #0b5394; text-decoration: underline;
+                    text-align: left; }
   .result { margin-top: 1rem; padding: 0.75rem; background: #f6f6f6;
             border-radius: 4px; white-space: pre-wrap; }
   .result.error { background: #fdecea; }
@@ -46,6 +56,10 @@ HTML_PAGE = """<!DOCTYPE html>
   .citation b { display: block; }
   .citation span { color: #555; font-size: 0.9rem; }
   #status { color: #555; }
+  #sources-list, #history-list { padding-left: 1.25rem; }
+  #sources-list li, #history-list li { margin: 0.4rem 0; }
+  #source-preview { max-height: 16rem; overflow: auto; }
+  .empty { color: #555; font-style: italic; }
 </style>
 </head>
 <body>
@@ -87,6 +101,25 @@ Pure Python, no external services.</p>
 <div id="ask-citations" hidden></div>
 </section>
 
+<section id="sources-panel">
+<h2>Indexed sources</h2>
+<p class="sub">Every document currently in the index. Click one to
+preview its stored text.</p>
+<button type="button" id="refresh-sources">Refresh sources</button>
+<ul id="sources-list"></ul>
+<p id="sources-empty" class="empty" hidden>No documents indexed yet.</p>
+<div id="source-preview" class="result" hidden></div>
+</section>
+
+<section id="history-panel">
+<h2>Question history</h2>
+<p class="sub">Past questions, kept in this browser only. Click one to
+see its answer and citations again.</p>
+<button type="button" id="clear-history">Clear history</button>
+<ul id="history-list"></ul>
+<p id="history-empty" class="empty" hidden>No questions asked yet.</p>
+</section>
+
 <script>
 async function postJSON(path, payload) {
   const resp = await fetch(path, {
@@ -117,6 +150,129 @@ async function refreshStatus() {
   }
 }
 
+function renderCitations(citesEl, body) {
+  citesEl.hidden = false;
+  citesEl.textContent = "";
+  const heading = document.createElement("h3");
+  heading.textContent = "Sources (" + body.source_count + ")";
+  citesEl.appendChild(heading);
+  body.citations.forEach((c) => {
+    const div = document.createElement("div");
+    div.className = "citation";
+    const label = document.createElement("b");
+    label.textContent = c.citation + (c.title ? " — " + c.title : "");
+    const snippet = document.createElement("div");
+    snippet.textContent = c.snippet;
+    const scores = document.createElement("span");
+    scores.textContent = "score " + c.score.toFixed(3) +
+      (c.rerank_score !== undefined ?
+        ", rerank " + c.rerank_score.toFixed(3) : "");
+    div.appendChild(label);
+    div.appendChild(snippet);
+    div.appendChild(scores);
+    citesEl.appendChild(div);
+  });
+}
+
+async function refreshSources() {
+  const list = document.getElementById("sources-list");
+  const empty = document.getElementById("sources-empty");
+  const preview = document.getElementById("source-preview");
+  try {
+    const resp = await fetch("/documents");
+    const body = await resp.json();
+    if (!resp.ok) { throw new Error(body.error || ("HTTP " + resp.status)); }
+    list.textContent = "";
+    empty.hidden = body.documents.length > 0;
+    body.documents.forEach((doc) => {
+      const li = document.createElement("li");
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "linklike";
+      btn.textContent = (doc.title || doc.doc_id) + " — " +
+        doc.doc_id + " (" + doc.num_chunks + " chunk(s))";
+      btn.addEventListener("click", async () => {
+        try {
+          const detail = await fetch("/documents/" +
+            encodeURIComponent(doc.doc_id));
+          const detailBody = await detail.json();
+          if (!detail.ok) {
+            throw new Error(detailBody.error || ("HTTP " + detail.status));
+          }
+          show(preview, detailBody.content);
+        } catch (err) {
+          show(preview, "Could not load source: " + err.message, true);
+        }
+      });
+      li.appendChild(btn);
+      list.appendChild(li);
+    });
+  } catch (e) {
+    list.textContent = "";
+    empty.hidden = true;
+    show(preview, "Could not load sources: " + e.message, true);
+  }
+}
+
+const HISTORY_KEY = "documind-history";
+const HISTORY_LIMIT = 20;
+
+function loadHistory() {
+  try {
+    const raw = localStorage.getItem(HISTORY_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function saveHistory(entry) {
+  const history = loadHistory();
+  history.unshift(entry);
+  const trimmed = history.slice(0, HISTORY_LIMIT);
+  try {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(trimmed));
+  } catch (e) {
+    // Private browsing or a full store: history is best-effort only.
+  }
+  return trimmed;
+}
+
+function renderHistory() {
+  const history = loadHistory();
+  const list = document.getElementById("history-list");
+  const empty = document.getElementById("history-empty");
+  list.textContent = "";
+  empty.hidden = history.length > 0;
+  history.forEach((entry) => {
+    const li = document.createElement("li");
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "linklike";
+    btn.textContent = entry.question;
+    btn.addEventListener("click", () => {
+      document.getElementById("ask-question").value = entry.question;
+      if (entry.method) {
+        document.getElementById("ask-method").value = entry.method;
+      }
+      show(document.getElementById("ask-answer"), entry.answer);
+      renderCitations(document.getElementById("ask-citations"), entry);
+    });
+    li.appendChild(btn);
+    list.appendChild(li);
+  });
+}
+
+document.getElementById("refresh-sources").addEventListener("click", () => {
+  refreshSources();
+});
+
+document.getElementById("clear-history").addEventListener("click", () => {
+  try { localStorage.removeItem(HISTORY_KEY); } catch (e) {}
+  renderHistory();
+});
+
 document.getElementById("upload-form").addEventListener("submit", async (e) => {
   e.preventDefault();
   const out = document.getElementById("upload-result");
@@ -132,6 +288,7 @@ document.getElementById("upload-form").addEventListener("submit", async (e) => {
     show(out, "Outcome: " + body.outcome + " — " + body.doc_id +
       " (" + body.num_chunks + " chunk(s)).");
     refreshStatus();
+    refreshSources();
   } catch (err) {
     show(out, "Upload failed: " + err.message, true);
   }
@@ -142,32 +299,18 @@ document.getElementById("ask-form").addEventListener("submit", async (e) => {
   const answerEl = document.getElementById("ask-answer");
   const citesEl = document.getElementById("ask-citations");
   try {
+    const question = document.getElementById("ask-question").value;
+    const method = document.getElementById("ask-method").value;
     const body = await postJSON("/qa", {
-      question: document.getElementById("ask-question").value,
-      method: document.getElementById("ask-method").value
+      question: question,
+      method: method
     });
     show(answerEl, body.answer);
-    citesEl.hidden = false;
-    citesEl.textContent = "";
-    const heading = document.createElement("h3");
-    heading.textContent = "Sources (" + body.source_count + ")";
-    citesEl.appendChild(heading);
-    body.citations.forEach((c) => {
-      const div = document.createElement("div");
-      div.className = "citation";
-      const label = document.createElement("b");
-      label.textContent = c.citation + (c.title ? " — " + c.title : "");
-      const snippet = document.createElement("div");
-      snippet.textContent = c.snippet;
-      const scores = document.createElement("span");
-      scores.textContent = "score " + c.score.toFixed(3) +
-        (c.rerank_score !== undefined ?
-          ", rerank " + c.rerank_score.toFixed(3) : "");
-      div.appendChild(label);
-      div.appendChild(snippet);
-      div.appendChild(scores);
-      citesEl.appendChild(div);
-    });
+    renderCitations(citesEl, body);
+    saveHistory({question: question, method: method,
+                 answer: body.answer, citations: body.citations,
+                 source_count: body.source_count});
+    renderHistory();
   } catch (err) {
     show(answerEl, "Ask failed: " + err.message, true);
     citesEl.hidden = true;
@@ -175,6 +318,8 @@ document.getElementById("ask-form").addEventListener("submit", async (e) => {
 });
 
 refreshStatus();
+refreshSources();
+renderHistory();
 </script>
 </body>
 </html>
