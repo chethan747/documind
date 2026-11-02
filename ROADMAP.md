@@ -71,7 +71,18 @@ Intelligence Platform by Day 21.
       markup; POST / is 405; 6 new tests in tests/test_webui.py,
       suite now 148 tests. Live demo verified: page served, upload
       201, cited /qa answer, health 4 documents / 15 chunks.)
-- [ ] **Day 12** — UI polish: sources panel, history
+- [x] **Day 12** — UI polish: sources panel, history
+      (web.py: sources panel listing indexed documents from
+      GET /documents with title, id and chunk count, a refresh
+      button, and click-to-preview fetching GET /documents/<doc_id>;
+      question history in localStorage under "documind-history",
+      newest first capped at 20, clickable to restore answer +
+      citations, with a clear button; sources refresh after every
+      successful upload; all panel rendering via textContent so
+      stored markup cannot inject; 6 new tests in
+      tests/test_ui_polish.py, suite now 154 tests. Live demo
+      verified: page served with both panels, /documents list 3,
+      one document preview, list grows to 4 after an upload.)
 - [ ] **Day 13** — Error handling + input validation pass
 - [ ] **Day 14** — Integration tests + v0.2 release notes
 
