@@ -125,7 +125,7 @@ when present, otherwise it rebuilds the index from the document store.
 
 | Method | Path | Purpose |
 |--------|------|---------|
-| GET | `/` or `/index.html` | web UI: upload + ask page (HTML, not JSON) |
+| GET | `/` or `/index.html` | web UI: upload + ask page, with sources panel and question history (HTML, not JSON) |
 | GET | `/health` | status, version, document/chunk counts |
 | GET | `/stats` | document/chunk counts, index presence |
 | POST | `/ingest` | `{"doc_id"?, "title"?, "text"}` — add/update one document (201 on add, 200 on update/unchanged, 409 on duplicate content) |
