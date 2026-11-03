@@ -83,7 +83,21 @@ Intelligence Platform by Day 21.
       tests/test_ui_polish.py, suite now 154 tests. Live demo
       verified: page served with both panels, /documents list 3,
       one document preview, list grows to 4 after an upload.)
-- [ ] **Day 13** — Error handling + input validation pass
+- [x] **Day 13** — Error handling + input validation pass
+      (validation.py: shared validators for k (integer 1..100, booleans
+      rejected), query/question (non-empty, max 2000 chars), doc_id
+      (letter/digit start, letters/digits/`.`/`_`/`-` only, max 128 —
+      so an id with `/` can no longer be stored yet never fetched),
+      title (max 500) and text (non-empty, max 2,000,000 chars);
+      Index.search and answer_question raise ValueError on bad input
+      instead of silently slicing or answering a blank question;
+      server returns JSON 400 for those, 413 for bodies over 10 MB,
+      and JSON 405 (not HTML 501) for PUT/PATCH on known paths, and
+      malformed Content-Length headers are answered 400 instead of
+      dropping the connection; 16 new tests in
+      tests/test_validation.py, suite now 170 tests. Live demo
+      verified: health 200, ingest slash-id 400, search k=0 400,
+      PUT /ask 405, /qa 200.)
 - [ ] **Day 14** — Integration tests + v0.2 release notes
 
 ## Week 3 — Polish + ship
