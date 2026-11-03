@@ -39,7 +39,13 @@ Endpoints (all JSON in, JSON out, except the web UI page):
 Status codes: 200 on success (201 when /ingest adds a new document),
 400 for missing/invalid input, 404 for unknown paths, 405 for a known
 path with the wrong method, 409 when /ingest text duplicates another
-document's content.
+document's content, 413 when a request body exceeds 10 MB.
+
+Day 13: shared input validation lives in validation.py and is applied
+at the core (Index.search validates query and k; DocuMindApp.ingest_text
+validates doc_id, title and text), so the API, the CLI and direct
+library calls reject bad input identically instead of crashing or
+returning misleading empty results.
 
 Run it from the CLI — ``python3 cli.py serve [--host] [--port]`` — or
 directly: ``python3 -m documind.server [--host] [--port] [--dir DIR]``.
@@ -59,11 +65,16 @@ from .index import SEARCH_METHODS, Index
 from .ingest import sha256_text
 from .qa import answer_question
 from .store import DocumentStore
+from .validation import validate_doc_id, validate_text, validate_title
 from .web import HTML_PAGE
 
 DEFAULT_HOST = "127.0.0.1"
 DEFAULT_PORT = 8000
 MAX_BODY_BYTES = 10 * 1024 * 1024  # refuse absurd payloads outright
+
+
+class BodyTooLargeError(ValueError):
+    """A request body over MAX_BODY_BYTES: answered 413, not 400."""
 
 
 def _slug(text):
@@ -141,9 +152,14 @@ class DocuMindApp:
         text under another id is "duplicate", otherwise the document is
         added or updated and the index is persisted.
         """
-        text = text.strip()
-        if not text:
-            return 400, {"error": "text must not be empty"}
+        try:
+            text = validate_text(text)
+            if doc_id is not None:
+                doc_id = validate_doc_id(doc_id)
+            if title is not None:
+                title = validate_title(title)
+        except ValueError as exc:
+            return 400, {"error": str(exc)}
         doc_id = doc_id or _slug(title or "document")
         title = title or doc_id
         text_hash = sha256_text(text)
@@ -330,9 +346,19 @@ def make_handler(app):
             self.wfile.write(body)
 
         def _read_json(self):
-            length = int(self.headers.get("Content-Length") or 0)
+            raw_length = self.headers.get("Content-Length")
+            try:
+                length = int(raw_length) if raw_length is not None else 0
+            except (TypeError, ValueError):
+                raise ValueError(
+                    "invalid Content-Length header %r" % (raw_length,))
+            if length < 0:
+                raise ValueError("invalid Content-Length header %r"
+                                 % (raw_length,))
             if length > MAX_BODY_BYTES:
-                raise ValueError("request body too large")
+                raise BodyTooLargeError(
+                    "request body too large (max %d bytes)"
+                    % MAX_BODY_BYTES)
             raw = self.rfile.read(length) if length else b""
             if not raw:
                 raise ValueError("empty request body: expected JSON")
@@ -422,6 +448,30 @@ def make_handler(app):
             else:
                 self._send(404, {"error": "unknown path %r" % parsed.path})
 
+        def _unsupported_method(self):
+            """JSON 405 for known paths, 404 for unknown ones.
+
+            Without this, PUT/PATCH fell through to BaseHTTPRequestHandler
+            and came back as an HTML 501 — inconsistent with the rest of
+            the API's JSON errors.
+            """
+            parsed = urlparse(self.path)
+            if parsed.path in ("/", "/index.html", "/health", "/stats",
+                               "/search", "/ingest", "/ask", "/qa",
+                               "/reindex") or \
+                    self._doc_path_parts(parsed) is not None:
+                self._send(405, {"error": "%s does not support %s"
+                                          % (parsed.path,
+                                             self.command)})
+            else:
+                self._send(404, {"error": "unknown path %r" % parsed.path})
+
+        def do_PUT(self):
+            self._unsupported_method()
+
+        def do_PATCH(self):
+            self._unsupported_method()
+
         def do_POST(self):
             parsed = urlparse(self.path)
             if parsed.path == "/reindex":
@@ -440,6 +490,9 @@ def make_handler(app):
                 return
             try:
                 data = self._read_json()
+            except BodyTooLargeError as exc:
+                self._send(413, {"error": str(exc)})
+                return
             except ValueError as exc:
                 self._send(400, {"error": str(exc)})
                 return
