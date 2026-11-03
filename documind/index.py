@@ -15,6 +15,7 @@ import json
 from .bm25 import BM25Scorer
 from .chunker import chunk_text
 from .embeddings import TfidfVectorizer, cosine_similarity
+from .validation import validate_k, validate_query
 
 # Ranking methods accepted by Index.search / qa.answer_question.
 SEARCH_METHODS = ("tfidf", "bm25", "combined")
@@ -94,11 +95,15 @@ class Index:
         ``method`` is ``"tfidf"`` (cosine similarity, the Day 1 default),
         ``"bm25"`` (BM25 score), or ``"combined"`` (the mean of the two
         scores after each is normalised by its own top score, so the two
-        scales are comparable). Raises ValueError for an unknown method.
+        scales are comparable). Raises ValueError for an unknown method,
+        a non-integer or out-of-range ``k`` (see validation.py), or a
+        blank / non-string query.
         """
         if method not in SEARCH_METHODS:
             raise ValueError("unknown search method %r (expected one of %s)"
                              % (method, ", ".join(SEARCH_METHODS)))
+        k = validate_k(k)
+        query = validate_query(query)
         if self._dirty:
             self.build()
         if not self.chunks:
