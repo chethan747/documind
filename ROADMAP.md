@@ -98,7 +98,17 @@ Intelligence Platform by Day 21.
       tests/test_validation.py, suite now 170 tests. Live demo
       verified: health 200, ingest slash-id 400, search k=0 400,
       PUT /ask 405, /qa 200.)
-- [ ] **Day 14** — Integration tests + v0.2 release notes
+- [x] **Day 14** — Integration tests + v0.2 release notes
+      (tests/test_integration.py: 7 tests driving the whole stack
+      together over real HTTP — full ingest → ask → delete → reindex
+      lifecycle, index rebuild from the store after a restart with
+      the saved index deleted, library/API answer agreement,
+      evaluation over the served index, failed requests leaving
+      state intact, the web-UI journey, 8 concurrent searches;
+      v0.2.0 released: `documind.__version__` bumped, CHANGELOG.md
+      [0.2.0] notes for Week 2, README feature list updated;
+      suite now 177 tests. Live demo verified: full lifecycle over
+      HTTP, restart rebuild, served-index evaluation hit rate 1.000.)
 
 ## Week 3 — Polish + ship
 
