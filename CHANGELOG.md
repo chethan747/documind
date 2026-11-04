@@ -8,11 +8,66 @@ follow [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Nothing yet — Week 3 (config + logging, Docker, CI, caching, v1.0)
+  is next; see the Roadmap below.
+
+## [0.2.0] — 2026-11-04 — API + web app (Week 2 complete)
+
+The second releasable DocuMind: everything from v0.1, plus a REST API
+and a browser UI over the same store and index the CLI uses, a
+validation pass so every layer rejects bad input the same way, and an
+integration suite that drives the whole stack together. Still pure
+Python standard library — no dependencies.
+
+### Added
+
 - REST API server (`documind/server.py`, `cli.py serve`): standard-library
   `ThreadingHTTPServer` exposing `GET /health`, `GET /stats`,
   `GET /search`, `POST /ingest` and `POST /ask` over the same store and
   index the CLI uses, with the file pipeline's dedup rules on ingest and
-  cited extractive answers on ask. Documented in the README.
+  cited extractive answers on ask. One lock serialises store/index
+  access across threads.
+- Document-management endpoints: `GET /documents` (summaries, no full
+  text), `GET /documents/<doc_id>` (with text), `DELETE
+  /documents/<doc_id>` (404 when unknown, repeat delete 404) and `POST
+  /reindex`, which rebuilds the index from the document store as
+  system of record.
+- Dedicated QA endpoint `POST /qa`: same request shape as `/ask`, but
+  the response carries structured `citations` (document id and title,
+  chunk index, scores, snippet, readable `"[doc_id, chunk N]"` label)
+  plus `source_count`; `/ask` is kept as a compatible alias.
+- Web UI (`documind/web.py`, served at `GET /`): dependency-free page
+  with an upload form posting to `/ingest`, an ask form posting to
+  `/qa` with answer + structured citations, a sources panel listing
+  indexed documents with click-to-preview, and question history in
+  localStorage (newest first, capped at 20, clickable, clearable). All
+  panel rendering uses `textContent`, so stored markup cannot inject.
+- Error handling + input validation pass (`documind/validation.py`):
+  shared validators for k (integer 1..100, booleans rejected),
+  query/question (non-empty, max 2000 chars), doc_id (letter/digit
+  start, letters/digits/`.`/`_`/`-` only, max 128), title (max 500)
+  and text (non-empty, max 2,000,000 chars), applied at the core so
+  the API, CLI and direct library calls reject bad input identically.
+  The server answers those with JSON 400, bodies over 10 MB with 413,
+  and PUT/PATCH on known paths with JSON 405 (not HTML 501); malformed
+  Content-Length headers are answered 400 instead of dropping the
+  connection.
+- Integration test suite (`tests/test_integration.py`): 7 tests driving
+  the whole stack together over real HTTP — full ingest → ask → delete
+  → reindex lifecycle, index rebuild from the store after a restart
+  with the saved index deleted, library/API answer agreement,
+  evaluation over the served index, failed requests leaving state
+  intact, the web-UI journey, and 8 concurrent search requests.
+- 177-test unittest suite (up from 107 at v0.1.0), all passing
+  (`python3 -m unittest discover -s tests`).
+
+### Notes
+
+- Honest scope, unchanged from v0.1: a personal, learning-grade
+  implementation built over 21 days — small, readable and fully
+  tested, not a production system.
+- Runtime artefacts (`index.json`, `documind.db`) are git-ignored and
+  are never part of a release.
 
 ## [0.1.0] — 2026-10-28 — Core engine (Week 1 complete)
 
@@ -80,8 +135,9 @@ Reproduce with `python3 cli.py eval --all-methods`.
 
 ## Roadmap
 
-- **v0.2 (Week 2)** — REST API server, document-management and QA
-  endpoints, web UI, error-handling pass, integration tests.
+- **v0.2 (Week 2)** — done and released above: REST API server,
+  document-management and QA endpoints, web UI, error-handling pass,
+  integration tests.
 - **v1.0 (Week 3)** — config + structured logging, Docker packaging,
   GitHub Actions CI, index caching and performance pass, final
   evaluation run, release notes and resume write-up.
