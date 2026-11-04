@@ -12,7 +12,7 @@ easy to study.
 
 ## Features
 
-**Done (v0.1 — core engine)**
+**Done (v0.2 — API + web app)**
 
 - [x] Overlapping, sentence-aware text chunker
 - [x] TF-IDF vectoriser built from scratch (tokenisation, idf, sparse vectors)
@@ -50,9 +50,27 @@ easy to study.
       On the shipped set all three methods score hit rate 1.000,
       MRR 1.000, QA citation 1.000 and QA terms 0.917
 
+- [x] REST API server (Days 8–10): `GET /health`, `/stats`,
+      `/search`, `/documents`; `POST /ingest`, `/ask`, `/qa` (structured
+      citations), `/reindex`; `DELETE /documents/<doc_id>` — all JSON,
+      with the file pipeline's dedup rules and JSON 400/404/405/409/413
+      errors; one lock serialises store/index access across threads
+- [x] Web UI (Days 11–12): dependency-free page at `GET /` with upload
+      + ask forms, a sources panel with click-to-preview, and question
+      history in localStorage (newest first, capped at 20); all panel
+      rendering via `textContent`, so stored markup cannot inject
+- [x] Error handling + input validation (Day 13): shared validators
+      for k, query/question, doc_id, title and text, applied at the
+      core so the API, CLI and library reject bad input identically
+- [x] Integration tests (Day 14): 7 tests driving the whole stack
+      together over real HTTP — full document lifecycle, restart
+      rebuild from the store, library/API agreement, evaluation over
+      the served index, failed requests leaving state intact, the web
+      UI journey, and concurrent searches
+
 **Roadmap** — see [ROADMAP.md](ROADMAP.md) for the full 21-day plan
-and [CHANGELOG.md](CHANGELOG.md) for release notes: Week 1 is complete
-and v0.1 (core engine) is released; next are REST API, web UI, Docker
+and [CHANGELOG.md](CHANGELOG.md) for release notes: Weeks 1–2 are
+complete and v0.2 (API + web app) is released; next are Docker
 packaging, CI, and a v1.0 release.
 
 ## Architecture
@@ -165,5 +183,5 @@ data/         sample documents the demo runs on
 eval/         sample Q&A set for the evaluation harness
 tests/        unittest suite
 ROADMAP.md    the 21-day build plan
-CHANGELOG.md  release notes (v0.1 core engine released 2026-10-28)
+CHANGELOG.md  release notes (v0.2 API + web app released 2026-11-04)
 ```
