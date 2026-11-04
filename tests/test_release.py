@@ -1,5 +1,5 @@
-"""Tests for the v0.1 release artefacts (Day 7): version reporting,
-the changelog and its consistency with the README.
+"""Tests for the release artefacts (Day 7, updated Day 14): version
+reporting, the changelog and its consistency with the README.
 """
 import os
 import re
@@ -19,9 +19,9 @@ def _read(name):
 
 
 class TestRelease(unittest.TestCase):
-    def test_version_is_semver_and_v01(self):
+    def test_version_is_semver_and_v02(self):
         self.assertRegex(__version__, r"^\d+\.\d+\.\d+$")
-        self.assertEqual(__version__, "0.1.0")
+        self.assertEqual(__version__, "0.2.0")
 
     def test_cli_version_flag(self):
         proc = subprocess.run(
@@ -31,12 +31,14 @@ class TestRelease(unittest.TestCase):
         self.assertIn(__version__, proc.stdout)
         self.assertIn("documind", proc.stdout.lower())
 
-    def test_changelog_documents_v01(self):
+    def test_changelog_documents_v02(self):
         changelog = _read("CHANGELOG.md")
         self.assertIn("## [0.1.0]", changelog)
+        self.assertIn("## [0.2.0]", changelog)
         self.assertIn(__version__, changelog)
         for keyword in ("TF-IDF", "BM25", "rerank", "SQLite",
-                        "evaluation", "citations"):
+                        "evaluation", "citations", "REST API",
+                        "web UI", "validation", "Integration"):
             self.assertIn(keyword, changelog,
                           "CHANGELOG should mention %s" % keyword)
 
@@ -51,7 +53,7 @@ class TestRelease(unittest.TestCase):
     def test_readme_points_at_changelog(self):
         readme = _read("README.md")
         self.assertIn("CHANGELOG.md", readme)
-        self.assertIn("v0.1", readme)
+        self.assertIn("v0.2", readme)
 
 
 if __name__ == "__main__":
