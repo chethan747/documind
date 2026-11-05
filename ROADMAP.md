@@ -112,7 +112,24 @@ Intelligence Platform by Day 21.
 
 ## Week 3 — Polish + ship
 
-- [ ] **Day 15** — Config file + structured logging
+- [x] **Day 15** — Config file + structured logging
+      (config.py: `config.json` — server host/port, index/store/data
+      paths, default method, search/ask k, chunk size/overlap, log
+      level/file/JSON — with `DOCUMIND_*` env overrides, strict
+      startup validation of unknown keys and out-of-range values,
+      and path resolution against the project root;
+      logging_config.py: one JSON object per log line (UTC timestamp,
+      level, logger, message, structured extra fields), file
+      handler, plain-text mode; server logs one `http_access` line
+      per request (path only, never the query string) plus ingest /
+      delete / reindex / startup events; `cli.py --config FILE`,
+      `cli.py config` prints the effective config, `serve --host` /
+      `--port` override the config; 33 new tests in
+      tests/test_config.py and tests/test_logging.py, suite now 210
+      tests. Live demo verified: `config` prints defaults, server
+      on configured port 8123 serves health/search/qa, JSON log
+      file carries startup + access lines with status and
+      duration_ms, no query string logged.)
 - [ ] **Day 16** — Dockerfile + docker-compose
 - [ ] **Day 17** — GitHub Actions CI running the tests
 - [ ] **Day 18** — Index caching + performance pass
