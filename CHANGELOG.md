@@ -8,8 +8,15 @@ follow [Semantic Versioning](https://semver.org/).
 
 ### Added
 
-- Nothing yet — Week 3 (config + logging, Docker, CI, caching, v1.0)
-  is next; see the Roadmap below.
+- Config file + structured logging (Day 15): `config.json` for host /
+  port, index/store/data paths, default ranking method, retrieval
+  cutoffs, chunk size/overlap and logging, with `DOCUMIND_*`
+  environment overrides, strict startup validation, and `cli.py
+  config` to print the effective config. Logs are one JSON object per
+  line (UTC timestamp, level, logger, message, structured fields);
+  the server logs one `http_access` line per request — path only,
+  never the query string — plus ingest / delete / reindex / startup
+  events. Test suite now 210 tests.
 
 ## [0.2.0] — 2026-11-04 — API + web app (Week 2 complete)
 
