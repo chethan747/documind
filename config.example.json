@@ -1,0 +1,23 @@
+{
+  "logging": {
+    "file": null,
+    "json": true,
+    "level": "INFO"
+  },
+  "paths": {
+    "data_dir": "data",
+    "index_file": "index.json",
+    "store_file": "documind.db"
+  },
+  "retrieval": {
+    "ask_k": 3,
+    "chunk_overlap": 80,
+    "chunk_size": 500,
+    "default_method": "tfidf",
+    "search_k": 5
+  },
+  "server": {
+    "host": "127.0.0.1",
+    "port": 8000
+  }
+}
