@@ -48,25 +48,34 @@ library calls reject bad input identically instead of crashing or
 returning misleading empty results.
 
 Run it from the CLI — ``python3 cli.py serve [--host] [--port]`` — or
-directly: ``python3 -m documind.server [--host] [--port] [--dir DIR]``.
+directly: ``python3 -m documind.server [--host] [--port] [--dir DIR]
+[--config FILE]``.
 ``--dir`` is the project directory holding ``index.json`` /
 ``documind.db`` (defaults to the project root); a saved index is loaded
 when present, otherwise the index is rebuilt from the document store.
+Host, port and the log level come from the config file when present
+(see documind/config.py); ``--host`` / ``--port`` override the config.
 """
 import json
 import os
 import re
+import sys
 import threading
+import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, unquote, urlparse
 
 from . import __version__
+from .config import load_config, resolve_paths
 from .index import SEARCH_METHODS, Index
 from .ingest import sha256_text
+from .logging_config import get_logger
 from .qa import answer_question
 from .store import DocumentStore
 from .validation import validate_doc_id, validate_text, validate_title
 from .web import HTML_PAGE
+
+log = get_logger("server")
 
 DEFAULT_HOST = "127.0.0.1"
 DEFAULT_PORT = 8000
@@ -109,10 +118,12 @@ class DocuMindApp:
     the code simple and correct.
     """
 
-    def __init__(self, base_dir):
+    def __init__(self, base_dir, config=None):
         self.base_dir = base_dir
-        self.index_path = os.path.join(base_dir, "index.json")
-        self.store_path = os.path.join(base_dir, "documind.db")
+        self.config = config or load_config(base_dir=base_dir)
+        paths = resolve_paths(self.config, base_dir)
+        self.index_path = paths["index_path"]
+        self.store_path = paths["store_path"]
         self.lock = threading.Lock()
         # check_same_thread=False is safe here because every store/index
         # access goes through the single app lock above.
@@ -166,11 +177,19 @@ class DocuMindApp:
 
         existing = self.store.get_document(doc_id)
         if existing is not None and existing["text_hash"] == text_hash:
+            log.info("ingest %s: unchanged" % doc_id,
+                     extra={"event": "ingest", "doc_id": doc_id,
+                            "outcome": "unchanged"})
             return 200, {"outcome": "unchanged", "doc_id": doc_id,
                          "title": existing["title"],
                          "num_chunks": existing["num_chunks"]}
         dup = self.store.find_by_hash(text_hash)
         if dup is not None and dup["doc_id"] != doc_id:
+            log.info("ingest %s: duplicate of %s"
+                     % (doc_id, dup["doc_id"]),
+                     extra={"event": "ingest", "doc_id": doc_id,
+                            "outcome": "duplicate",
+                            "duplicate_of": dup["doc_id"]})
             return 409, {"outcome": "duplicate", "doc_id": doc_id,
                          "detail": "identical content already stored as %r"
                                    % dup["doc_id"]}
@@ -187,6 +206,10 @@ class DocuMindApp:
         self.index.save(self.index_path)
         status = 201 if existing is None else 200
         outcome = "added" if existing is None else "updated"
+        log.info("ingest %s: %s (%d chunks)"
+                 % (doc_id, outcome, num_chunks),
+                 extra={"event": "ingest", "doc_id": doc_id,
+                        "outcome": outcome, "num_chunks": num_chunks})
         return status, {"outcome": outcome, "doc_id": doc_id,
                         "title": title, "num_chunks": num_chunks}
 
@@ -281,6 +304,9 @@ class DocuMindApp:
         removed = self.index.remove_document(doc_id)
         self.store.delete_document(doc_id)
         self.index.save(self.index_path)
+        log.info("delete %s: %d chunks removed" % (doc_id, removed),
+                 extra={"event": "delete", "doc_id": doc_id,
+                        "chunks_removed": removed})
         return 200, {"outcome": "deleted", "doc_id": doc_id,
                      "chunks_removed": removed}
 
@@ -302,6 +328,12 @@ class DocuMindApp:
             self.store.set_num_chunks(doc["doc_id"], num_chunks)
         self.index = index
         self.index.save(self.index_path)
+        log.info("reindex: %d documents, %d chunks (was %d)"
+                 % (len(docs), len(self.index), previous_chunks),
+                 extra={"event": "reindex",
+                        "documents": len(docs),
+                        "chunks": len(self.index),
+                        "previous_chunks": previous_chunks})
         return 200, {"outcome": "reindexed",
                      "documents": len(docs),
                      "chunks": len(self.index),
@@ -326,8 +358,34 @@ def make_handler(app):
         server_version = "DocuMind/%s" % __version__
 
         # -- plumbing --------------------------------------------------
-        def log_message(self, *args):  # keep the server quiet by default
+        def handle_one_request(self):
+            # Time the request so the access log can report duration.
+            self._request_start = time.monotonic()
+            super().handle_one_request()
+
+        def log_message(self, *args):  # BaseHTTPRequestHandler's own
+            # stderr access log stays off: _log_access below writes one
+            # structured JSON line per request instead.
             pass
+
+        def _log_access(self, status):
+            """One structured JSON line per request (Day 15).
+
+            Only the path is logged, never the query string: search
+            queries and questions are user content and do not belong
+            in a log file.
+            """
+            start = getattr(self, "_request_start", None)
+            duration_ms = None
+            if start is not None:
+                duration_ms = round((time.monotonic() - start) * 1000, 1)
+            log.info("%s %s -> %d" % (self.command,
+                                      urlparse(self.path).path, status),
+                     extra={"event": "http_access",
+                            "method": self.command,
+                            "path": urlparse(self.path).path,
+                            "status": status,
+                            "duration_ms": duration_ms})
 
         def _send(self, status, payload):
             body = json.dumps(payload).encode("utf-8")
@@ -336,6 +394,7 @@ def make_handler(app):
             self.send_header("Content-Length", str(len(body)))
             self.end_headers()
             self.wfile.write(body)
+            self._log_access(status)
 
         def _send_html(self, status, html):
             body = html.encode("utf-8")
@@ -344,6 +403,7 @@ def make_handler(app):
             self.send_header("Content-Length", str(len(body)))
             self.end_headers()
             self.wfile.write(body)
+            self._log_access(status)
 
         def _read_json(self):
             raw_length = self.headers.get("Content-Length")
@@ -538,24 +598,44 @@ def make_handler(app):
     return Handler
 
 
-def create_server(base_dir, host=DEFAULT_HOST, port=DEFAULT_PORT):
-    """Build (but do not start) a server for ``base_dir``."""
-    app = DocuMindApp(base_dir)
+def create_server(base_dir, host=None, port=None, config=None):
+    """Build (but do not start) a server for ``base_dir``.
+
+    ``host``/``port`` default to the config's server section (or
+    127.0.0.1:8000 with no config file); ``config`` may be a dict
+    already loaded by :func:`documind.config.load_config`, otherwise
+    it is loaded from ``base_dir``.
+    """
+    config = config or load_config(base_dir=base_dir)
+    host = host if host is not None else config["server"]["host"]
+    port = port if port is not None else config["server"]["port"]
+    app = DocuMindApp(base_dir, config=config)
     server = ThreadingHTTPServer((host, port), make_handler(app))
     server.documind_app = app
     return server
 
 
-def serve(base_dir, host=DEFAULT_HOST, port=DEFAULT_PORT):
+def serve(base_dir, host=None, port=None, config=None):
     """Serve forever; Ctrl-C stops the server cleanly."""
-    server = create_server(base_dir, host, port)
+    config = config or load_config(base_dir=base_dir)
+    host = host if host is not None else config["server"]["host"]
+    port = port if port is not None else config["server"]["port"]
+    server = create_server(base_dir, host, port, config=config)
     print("DocuMind API listening on http://%s:%d (data dir: %s)"
-          % (host, server.server_address[1], base_dir))
+          % (host, server.server_address[1], base_dir), flush=True)
+    log.info("server started on %s:%d (data dir: %s)"
+             % (host, server.server_address[1], base_dir),
+             extra={"event": "startup", "host": host,
+                    "port": server.server_address[1],
+                    "base_dir": base_dir,
+                    "documents": server.documind_app.store.count(),
+                    "chunks": len(server.documind_app.index)})
     try:
         server.serve_forever()
     except KeyboardInterrupt:
         pass
     finally:
+        log.info("server stopped", extra={"event": "shutdown"})
         server.server_close()
         server.documind_app.close()
     return 0
@@ -566,14 +646,28 @@ def main(argv=None):
     parser = argparse.ArgumentParser(
         prog="documind.server",
         description="DocuMind REST API server (standard library only).")
-    parser.add_argument("--host", default=DEFAULT_HOST)
-    parser.add_argument("--port", type=int, default=DEFAULT_PORT)
+    parser.add_argument("--host", default=None,
+                        help="bind address (default: from config, "
+                             "else %s)" % DEFAULT_HOST)
+    parser.add_argument("--port", type=int, default=None,
+                        help="port (default: from config, else %d)"
+                             % DEFAULT_PORT)
+    parser.add_argument("--config",
+                        help="config file (default: DOCUMIND_CONFIG, "
+                             "else ./config.json when present)")
     parser.add_argument("--dir", default=os.path.dirname(
         os.path.dirname(os.path.abspath(__file__))),
         help="project directory holding index.json / documind.db "
              "(default: project root)")
     args = parser.parse_args(argv)
-    return serve(args.dir, args.host, args.port)
+    try:
+        config = load_config(path=args.config, base_dir=args.dir)
+    except ValueError as exc:
+        print("error: %s" % exc, file=sys.stderr)
+        return 2
+    from .logging_config import configure_from_config
+    configure_from_config(config)
+    return serve(args.dir, args.host, args.port, config=config)
 
 
 if __name__ == "__main__":
