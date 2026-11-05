@@ -68,6 +68,16 @@ easy to study.
       the served index, failed requests leaving state intact, the web
       UI journey, and concurrent searches
 
+- [x] Config file + structured logging (Day 15): `config.json`
+      (host/port, index/store/data paths, default ranking method,
+      retrieval cutoffs, chunk size/overlap, log level/file/JSON
+      format) with `DOCUMIND_*` environment overrides and strict
+      startup validation; `cli.py config` prints the effective
+      config; every log line is one JSON object with a UTC timestamp
+      and structured fields, the server logs one `http_access` line
+      per request (path only, never the query string) plus ingest /
+      delete / reindex / startup events
+
 **Roadmap** — see [ROADMAP.md](ROADMAP.md) for the full 21-day plan
 and [CHANGELOG.md](CHANGELOG.md) for release notes: Weeks 1–2 are
 complete and v0.2 (API + web app) is released; next are Docker
@@ -157,6 +167,39 @@ when present, otherwise it rebuilds the index from the document store.
 
 Bad input returns 400, unknown paths 404, wrong-method calls 405.
 
+## Configuration & logging
+
+Host, port, file locations, ranking defaults, chunk size and the log
+level live in a config file instead of in code — copy
+`config.example.json` to `config.json` and edit it:
+
+```json
+{
+  "server":    {"host": "127.0.0.1", "port": 8000},
+  "paths":     {"index_file": "index.json", "store_file": "documind.db",
+                "data_dir": "data"},
+  "retrieval": {"default_method": "tfidf", "search_k": 5, "ask_k": 3,
+                "chunk_size": 500, "chunk_overlap": 80},
+  "logging":   {"level": "INFO", "file": null, "json": true}
+}
+```
+
+Precedence: environment variables (`DOCUMIND_HOST`, `DOCUMIND_PORT`,
+`DOCUMIND_LOG_LEVEL`, `DOCUMIND_LOG_FILE`) beat the file, which beats
+the built-in defaults. Pass an explicit file with `cli.py --config
+FILE <command>` or `DOCUMIND_CONFIG=FILE`; `cli.py config` prints the
+effective config. Unknown keys and out-of-range values are rejected
+at startup with a plain-language error, so a typo fails loudly
+instead of silently doing nothing.
+
+Every log line is one JSON object on stderr (or the configured log
+file), with a UTC timestamp, level, logger, message and structured
+fields — the server logs one `http_access` line per request
+(`method`, `path`, `status`, `duration_ms`) plus `ingest` / `delete` /
+`reindex` / `startup` events. Query strings are never logged: search
+queries and questions are user content. Set `"json": false` for
+plain-text logs.
+
 ## Tech notes
 
 - **Pure Python standard library** — the goal is to show the mechanics of
@@ -177,8 +220,11 @@ Bad input returns 400, unknown paths 404, wrong-method calls 405.
 
 ```
 documind/     core package: chunker, embeddings, bm25, index, rerank,
-              qa, ingest, store, evaluate, server (REST API), web (UI page)
+              qa, ingest, store, evaluate, server (REST API), web (UI page),
+              config (config file + env overrides),
+              logging_config (structured JSON logging)
 cli.py        command-line interface
+config.example.json  documented config file (copy to config.json to use)
 data/         sample documents the demo runs on
 eval/         sample Q&A set for the evaluation harness
 tests/        unittest suite
