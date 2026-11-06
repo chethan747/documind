@@ -130,7 +130,29 @@ Intelligence Platform by Day 21.
       on configured port 8123 serves health/search/qa, JSON log
       file carries startup + access lines with status and
       duration_ms, no query string logged.)
-- [ ] **Day 16** — Dockerfile + docker-compose
+- [x] **Day 16** — Dockerfile + docker-compose
+      (Dockerfile: python:3.12-slim, no dependencies to install,
+      non-root `documind` user, `/data` owned by it, `EXPOSE 8000`,
+      `/health` healthcheck, `CMD ["python3", "cli.py", "serve"]`;
+      docker-compose.yml: builds the image, publishes 8000, persists
+      index/store/docs in the named volume `documind-data` mounted at
+      `/data`, restarts unless stopped; `.dockerignore` keeps runtime
+      artefacts, caches and dev tooling out of the image; config.py
+      gains `DOCUMIND_INDEX_FILE` / `DOCUMIND_STORE_FILE` /
+      `DOCUMIND_DATA_DIR` env overrides so the container points its
+      state at the volume without a config file; README gains a
+      "Run with Docker" section. Also fixed a Day 15 access-log race
+      found while getting the suite green: `_send`/`_send_html`
+      logged after writing the body to the unbuffered socket, so the
+      404 access line could arrive after the client had already read
+      the response — both now log before writing the body, verified
+      0 late arrivals in 200 runs (was 10). 26 new tests in
+      tests/test_docker.py, suite now 236 tests. Live demo verified:
+      server run with the exact compose environment against a scratch
+      directory standing in for the volume — health 200, ingest 201,
+      cited /qa answer, index + store created in the volume dir.
+      No Docker daemon on the build machine, so `docker build` /
+      `docker compose up` were not run there.)
 - [ ] **Day 17** — GitHub Actions CI running the tests
 - [ ] **Day 18** — Index caching + performance pass
 - [ ] **Day 19** — README polish with screenshots / demo output
