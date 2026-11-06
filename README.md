@@ -78,10 +78,17 @@ easy to study.
       per request (path only, never the query string) plus ingest /
       delete / reindex / startup events
 
+- [x] Docker packaging (Day 16): `Dockerfile` (Python 3.12 slim,
+      non-root user, `/health` healthcheck) and `docker-compose.yml`
+      with the index, SQLite store and documents persisted in a named
+      volume; `DOCUMIND_INDEX_FILE` / `DOCUMIND_STORE_FILE` /
+      `DOCUMIND_DATA_DIR` environment overrides point the paths at
+      the volume, so no config file is needed in the image
+
 **Roadmap** — see [ROADMAP.md](ROADMAP.md) for the full 21-day plan
 and [CHANGELOG.md](CHANGELOG.md) for release notes: Weeks 1–2 are
-complete and v0.2 (API + web app) is released; next are Docker
-packaging, CI, and a v1.0 release.
+complete and v0.2 (API + web app) is released; Docker packaging is
+done, next are CI, and a v1.0 release.
 
 ## Architecture
 
@@ -145,6 +152,44 @@ python3 cli.py serve
 # then open http://127.0.0.1:8000 in a browser for the upload + ask page
 ```
 
+## Run with Docker
+
+The image is Python 3.12 slim plus the source — DocuMind has no
+third-party dependencies, so there is nothing to install. The server
+inside the container is the same one `python3 cli.py serve` starts
+locally, and it runs as a non-root user.
+
+```bash
+# build and start the API + web UI on http://localhost:8000
+docker compose up --build
+
+# stop it — documents and the index are kept in the named volume
+docker compose down
+
+# stop it and delete the stored documents and index
+docker compose down -v
+```
+
+Or without compose:
+
+```bash
+docker build -t documind .
+docker run --rm -p 8000:8000 documind
+```
+
+State lives in the named volume `documind-data`, mounted at `/data`:
+the search index (`/data/index.json`), the SQLite document store
+(`/data/documind.db`) and uploaded documents (`/data/docs`). The
+image defaults point all three paths there via
+`DOCUMIND_INDEX_FILE`, `DOCUMIND_STORE_FILE` and
+`DOCUMIND_DATA_DIR`, so removing or rebuilding the container does
+not lose anything — only `docker compose down -v` wipes the data.
+The same image runs the test suite:
+
+```bash
+docker compose run --rm documind python3 -m unittest discover -s tests
+```
+
 ## REST API
 
 Standard library only — no framework, no dependencies. All endpoints
@@ -185,6 +230,7 @@ level live in a config file instead of in code — copy
 ```
 
 Precedence: environment variables (`DOCUMIND_HOST`, `DOCUMIND_PORT`,
+`DOCUMIND_INDEX_FILE`, `DOCUMIND_STORE_FILE`, `DOCUMIND_DATA_DIR`,
 `DOCUMIND_LOG_LEVEL`, `DOCUMIND_LOG_FILE`) beat the file, which beats
 the built-in defaults. Pass an explicit file with `cli.py --config
 FILE <command>` or `DOCUMIND_CONFIG=FILE`; `cli.py config` prints the
