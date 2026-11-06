@@ -393,8 +393,14 @@ def make_handler(app):
             self.send_header("Content-Type", "application/json")
             self.send_header("Content-Length", str(len(body)))
             self.end_headers()
-            self.wfile.write(body)
+            # Log before writing the body: the socket is unbuffered
+            # (wbufsize = 0), so the client can receive the response
+            # the moment the body is written — a log line emitted
+            # after it races the client's next read and can arrive
+            # late, or be lost outright if the handler thread is
+            # still queued when the process moves on.
             self._log_access(status)
+            self.wfile.write(body)
 
         def _send_html(self, status, html):
             body = html.encode("utf-8")
@@ -402,8 +408,8 @@ def make_handler(app):
             self.send_header("Content-Type", "text/html; charset=utf-8")
             self.send_header("Content-Length", str(len(body)))
             self.end_headers()
-            self.wfile.write(body)
             self._log_access(status)
+            self.wfile.write(body)
 
         def _read_json(self):
             raw_length = self.headers.get("Content-Length")
