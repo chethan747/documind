@@ -8,6 +8,34 @@ follow [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Docker packaging (Day 16): `Dockerfile` (Python 3.12 slim, no
+  dependencies to install, non-root `documind` user, `/health`
+  healthcheck, state in `/data`) and `docker-compose.yml` (builds the
+  image, publishes port 8000, persists the index / SQLite store /
+  documents in the named volume `documind-data` mounted at `/data`,
+  restarts unless stopped); `.dockerignore` keeps runtime artefacts,
+  caches and dev tooling out of the image. New `DOCUMIND_INDEX_FILE`,
+  `DOCUMIND_STORE_FILE` and `DOCUMIND_DATA_DIR` environment overrides
+  point the index, store and data directory at a mounted volume
+  without a config file. Test suite now 236 tests, including
+  `tests/test_docker.py` validating the Dockerfile, compose file,
+  `.dockerignore` and the new path overrides. No Docker daemon was
+  available on the build machine, so `docker build` / `docker compose
+  up` were not run there; the files were validated by parsing and by
+  running the server with the exact environment the compose file
+  sets, against a scratch directory standing in for the volume.
+
+### Fixed
+
+- Access-log race (Day 15): the server wrote its `http_access` line
+  after writing the response body, but the socket is unbuffered
+  (`wbufsize = 0`), so a client could receive the response before
+  the log line existed — `test_ingest_and_error_requests_are_logged`
+  failed intermittently (about 1 run in 20) with the 404 line
+  missing. `_send` and `_send_html` now log before writing the
+  body; the log line is guaranteed to exist by the time the client
+  can read the response. Verified 0 late arrivals in 200 runs
+  (was 10) and a green full suite twice in a row.
 - Config file + structured logging (Day 15): `config.json` for host /
   port, index/store/data paths, default ranking method, retrieval
   cutoffs, chunk size/overlap and logging, with `DOCUMIND_*`
