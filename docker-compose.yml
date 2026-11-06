@@ -1,0 +1,40 @@
+# DocuMind — AI Document Intelligence Platform (Day 16)
+#
+#   docker compose up --build     start the API + web UI on :8000
+#   docker compose down           stop it (data is kept in the volume)
+#   docker compose down -v        stop it and delete the stored data
+#
+# The web UI is at http://localhost:8000 — upload documents, ask
+# questions with citations, browse the sources panel.
+#
+# State lives in the named volume `documind-data`, mounted at /data:
+# the search index (/data/index.json), the SQLite document store
+# (/data/documind.db) and uploaded documents (/data/docs). The image
+# defaults already point the config paths at /data; the environment
+# below repeats them so the persistence mechanism is visible here
+# rather than hidden in the Dockerfile. Removing the container does
+# not delete the volume, so a rebuild or restart keeps every
+# document — `down -v` is the only thing that wipes it.
+#
+# Tests run in the same image, against the same code:
+#   docker compose run --rm documind python3 -m unittest discover -s tests
+services:
+  documind:
+    build: .
+    image: documind:latest
+    container_name: documind
+    ports:
+      - "8000:8000"
+    environment:
+      DOCUMIND_HOST: "0.0.0.0"
+      DOCUMIND_PORT: "8000"
+      DOCUMIND_INDEX_FILE: /data/index.json
+      DOCUMIND_STORE_FILE: /data/documind.db
+      DOCUMIND_DATA_DIR: /data/docs
+      DOCUMIND_LOG_LEVEL: "INFO"
+    volumes:
+      - documind-data:/data
+    restart: unless-stopped
+
+volumes:
+  documind-data:
