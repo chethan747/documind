@@ -1,0 +1,17 @@
+# Files that must never be copied into the Docker image.
+# Runtime artefacts are generated when the container runs (and live
+# in the /data volume); dev tooling and caches have no place in it.
+.git
+__pycache__/
+*.py[cod]
+*.log
+index.json
+documind.db
+config.json
+bin/
+.venv/
+venv/
+env/
+.idea/
+.vscode/
+.DS_Store
