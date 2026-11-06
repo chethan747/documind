@@ -8,7 +8,12 @@ can be changed without editing code.
 Precedence, highest first:
 
 1. Environment variables — ``DOCUMIND_HOST``, ``DOCUMIND_PORT``,
-   ``DOCUMIND_LOG_LEVEL``, ``DOCUMIND_LOG_FILE``.
+   ``DOCUMIND_INDEX_FILE``, ``DOCUMIND_STORE_FILE``,
+   ``DOCUMIND_DATA_DIR``, ``DOCUMIND_LOG_LEVEL``, ``DOCUMIND_LOG_FILE``.
+   The path variables exist so a container (Day 16) can point the
+   index, the store and the data directory at a mounted volume
+   without shipping a config file; they work anywhere, not just in
+   Docker.
 2. A config file — the path passed to :func:`load_config`, else the
    ``DOCUMIND_CONFIG`` environment variable, else ``config.json`` in the
    project directory when it exists.
@@ -62,6 +67,9 @@ DEFAULT_CONFIG = {
 _ENV_OVERRIDES = {
     ("server", "host"): "DOCUMIND_HOST",
     ("server", "port"): "DOCUMIND_PORT",
+    ("paths", "index_file"): "DOCUMIND_INDEX_FILE",
+    ("paths", "store_file"): "DOCUMIND_STORE_FILE",
+    ("paths", "data_dir"): "DOCUMIND_DATA_DIR",
     ("logging", "level"): "DOCUMIND_LOG_LEVEL",
     ("logging", "file"): "DOCUMIND_LOG_FILE",
 }
