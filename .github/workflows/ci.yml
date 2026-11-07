@@ -1,0 +1,47 @@
+# DocuMind CI — runs the full test suite on every push and pull request.
+#
+# The project is pure Python standard library, so there is nothing to
+# install: the job checks out the code, sets up the requested Python
+# version, byte-compiles everything, runs the unittest suite, and
+# scores the pipeline on the sample Q&A set as an end-to-end smoke
+# check. The suite must stay green on every supported Python version
+# (3.10, 3.11, 3.12); a failing job blocks the merge.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# A newer push to the same branch supersedes the older run, so the
+# queue never stacks up behind stale commits.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Byte-compile the source
+        run: python3 -m compileall -q cli.py documind tests
+
+      - name: Run the test suite
+        run: python3 -m unittest discover -s tests
+
+      - name: Smoke-check the evaluation harness
+        run: python3 cli.py eval --all-methods
