@@ -1,5 +1,7 @@
 # DocuMind — AI Document Intelligence Platform
 
+[![CI](https://github.com/chethan747/documind/actions/workflows/ci.yml/badge.svg)](https://github.com/chethan747/documind/actions/workflows/ci.yml)
+
 **Ask questions over your own documents and get answers with citations —
 a retrieval-augmented generation (RAG) system built from scratch in pure Python.**
 
@@ -84,6 +86,12 @@ easy to study.
       volume; `DOCUMIND_INDEX_FILE` / `DOCUMIND_STORE_FILE` /
       `DOCUMIND_DATA_DIR` environment overrides point the paths at
       the volume, so no config file is needed in the image
+
+- [x] Continuous integration (Day 17): GitHub Actions runs the full
+      test suite on every push and pull request to main, across
+      Python 3.10, 3.11 and 3.12, plus a byte-compile check and an
+      end-to-end smoke run of the evaluation harness — no
+      dependencies to install, the project is pure standard library
 
 **Roadmap** — see [ROADMAP.md](ROADMAP.md) for the full 21-day plan
 and [CHANGELOG.md](CHANGELOG.md) for release notes: Weeks 1–2 are
@@ -274,6 +282,8 @@ config.example.json  documented config file (copy to config.json to use)
 data/         sample documents the demo runs on
 eval/         sample Q&A set for the evaluation harness
 tests/        unittest suite
+.github/workflows/ci.yml  GitHub Actions: tests on Python 3.10–3.12
+              for every push / pull request to main
 ROADMAP.md    the 21-day build plan
 CHANGELOG.md  release notes (v0.2 API + web app released 2026-11-04)
 ```
