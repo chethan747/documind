@@ -153,7 +153,21 @@ Intelligence Platform by Day 21.
       cited /qa answer, index + store created in the volume dir.
       No Docker daemon on the build machine, so `docker build` /
       `docker compose up` were not run there.)
-- [ ] **Day 17** — GitHub Actions CI running the tests
+- [x] **Day 17** — GitHub Actions CI running the tests
+      (.github/workflows/ci.yml: runs on push and pull requests to
+      main, with a concurrency group cancelling stale runs; one job
+      per Python version — 3.10, 3.11, 3.12, fail-fast off — on
+      ubuntu-latest, checking out the code, setting up Python,
+      byte-compiling cli.py / documind / tests, running
+      `python3 -m unittest discover -s tests`, then smoke-checking
+      `cli.py eval --all-methods`; nothing to install, the project
+      is pure stdlib. 20 new tests in tests/test_ci.py cover the
+      parsed workflow — triggers, matrix, checkout/setup-python
+      versions, step order — plus text-level checks and a local run
+      of the exact commands CI runs, suite now 256 tests. Live
+      demo verified: the CI commands run cleanly locally — compile
+      0, full suite 256 OK, eval all methods hit rate 1.000, MRR
+      1.000, QA citation 1.000, QA terms 0.917.)
 - [ ] **Day 18** — Index caching + performance pass
 - [ ] **Day 19** — README polish with screenshots / demo output
 - [ ] **Day 20** — Final evaluation run, results documented
