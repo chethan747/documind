@@ -20,6 +20,10 @@ Usage:
                                        set (hit rate, MRR, QA citations).
     python3 cli.py config              Print the effective configuration
                                        (defaults + config.json + env).
+    python3 cli.py bench [--scale N]   Benchmark index build + search
+                                       speed (cold vs cache-warm) over the
+                                       sample corpus, scaled to N copies
+                                       of each document.
 
 Configuration (Day 15): ``python3 cli.py [--config FILE] <command>``
 loads FILE, else $DOCUMIND_CONFIG, else ./config.json when present,
@@ -38,6 +42,8 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from documind import __version__
+from documind.benchmark import (format_benchmark, run_benchmark,
+                                scale_corpus)
 from documind.config import (DEFAULT_CONFIG, load_config, resolve_paths)
 from documind.evaluate import (evaluate_all_methods, format_report,
                                load_cases, run_evaluation)
@@ -96,7 +102,8 @@ def cmd_ingest(args):
     store = DocumentStore(STORE_PATH)
     try:
         retrieval = CONFIG["retrieval"]
-        index = Index(retrieval["chunk_size"], retrieval["chunk_overlap"])
+        index = Index(retrieval["chunk_size"], retrieval["chunk_overlap"],
+                      cache_size=retrieval["query_cache_size"])
         # rebuild the index from everything already in the store, then add
         for doc in store.list_documents():
             metadata = dict(doc["metadata"])
@@ -131,7 +138,8 @@ def cmd_ask(args):
     if not os.path.exists(INDEX_PATH):
         print("error: no index found — run `ingest` first", file=sys.stderr)
         return 1
-    index = Index.load(INDEX_PATH)
+    index = Index.load(INDEX_PATH,
+                       cache_size=CONFIG["retrieval"]["query_cache_size"])
     method = args.method or CONFIG["retrieval"]["default_method"]
     try:
         result = answer_question(index, args.question,
@@ -196,7 +204,8 @@ def cmd_eval(args):
         print("error: %s" % exc, file=sys.stderr)
         return 1
     if os.path.exists(INDEX_PATH) and not args.data_dir:
-        index = Index.load(INDEX_PATH)
+        index = Index.load(INDEX_PATH,
+                           cache_size=CONFIG["retrieval"]["query_cache_size"])
     else:
         # no saved index (or an explicit folder): build one in memory
         # from the sample documents, so `eval` works on a fresh checkout
@@ -208,7 +217,8 @@ def cmd_eval(args):
         try:
             retrieval = CONFIG["retrieval"]
             index = Index(retrieval["chunk_size"],
-                          retrieval["chunk_overlap"])
+                          retrieval["chunk_overlap"],
+                          cache_size=retrieval["query_cache_size"])
             ingest_folder(store, index, folder)
         finally:
             store.close()
@@ -247,11 +257,61 @@ def cmd_config(_args):
     return 0
 
 
+def cmd_bench(args):
+    """Benchmark the index (Day 18).
+
+    Builds an index from the sample documents, scales it to
+    ``--scale`` copies of each document (near-duplicates: a load
+    test for retrieval speed, not quality), then times cold vs
+    warm searches for every ranking method over the evaluation
+    questions and prints the table.
+    """
+    folder = args.data_dir or resolve_paths(CONFIG, BASE_DIR)["data_dir"]
+    if not os.path.isdir(folder):
+        print("error: not a folder: %s" % folder, file=sys.stderr)
+        return 1
+    if args.scale < 1:
+        print("error: --scale must be at least 1, got %d" % args.scale,
+              file=sys.stderr)
+        return 1
+    if args.warm_repeats < 1:
+        print("error: --warm-repeats must be at least 1, got %d"
+              % args.warm_repeats, file=sys.stderr)
+        return 1
+    try:
+        cases = load_cases(os.path.join(BASE_DIR, "eval", "eval_qa.json"))
+    except (OSError, ValueError) as exc:
+        print("error: %s" % exc, file=sys.stderr)
+        return 1
+    questions = [case["question"] for case in cases]
+    store = DocumentStore()
+    try:
+        retrieval = CONFIG["retrieval"]
+        index = Index(retrieval["chunk_size"],
+                      retrieval["chunk_overlap"],
+                      cache_size=retrieval["query_cache_size"])
+        ingest_folder(store, index, folder)
+        documents = [(doc["doc_id"], doc["content"])
+                     for doc in store.list_documents()]
+    finally:
+        store.close()
+    if args.scale > 1:
+        added = scale_corpus(index, documents, args.scale - 1)
+        print("scaled corpus: +%d near-duplicate documents (x%d)"
+              % (added, args.scale))
+    report = run_benchmark(index, questions,
+                           k=CONFIG["retrieval"]["search_k"],
+                           warm_repeats=args.warm_repeats)
+    print(format_benchmark(report), end="")
+    return 0
+
+
 def cmd_demo(_args):
     # a fresh in-memory store + index keeps the demo self-contained
     store = DocumentStore()
     retrieval = CONFIG["retrieval"]
-    index = Index(retrieval["chunk_size"], retrieval["chunk_overlap"])
+    index = Index(retrieval["chunk_size"], retrieval["chunk_overlap"],
+                  cache_size=retrieval["query_cache_size"])
     stats = ingest_folder(store, index, os.path.join(BASE_DIR, "data"))
     _print_ingest_stats(stats)
     for question in DEMO_QUESTIONS:
@@ -330,6 +390,20 @@ def main(argv=None):
     p_config = sub.add_parser(
         "config", help="print the effective configuration")
     p_config.set_defaults(func=cmd_config)
+
+    p_bench = sub.add_parser(
+        "bench", help="benchmark index build + search speed "
+                      "(cold vs cache-warm) over the sample corpus")
+    p_bench.add_argument("--scale", type=int, default=100,
+                         help="copies of each sample document to index "
+                              "(default: 100, i.e. 300 documents)")
+    p_bench.add_argument("--warm-repeats", type=int, default=5,
+                         help="warm (cache-hit) passes per method "
+                              "(default: 5)")
+    p_bench.add_argument("--data-dir",
+                         help="index this folder instead of the "
+                              "configured data dir")
+    p_bench.set_defaults(func=cmd_bench)
 
     args = parser.parse_args(argv)
     global CONFIG, INDEX_PATH, STORE_PATH
