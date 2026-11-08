@@ -155,6 +155,9 @@ python3 cli.py ask "What is AEM built on?"
 # score the pipeline on the sample Q&A set (all ranking methods)
 python3 cli.py eval --all-methods
 
+# benchmark index build + search speed (cold vs cache-warm)
+python3 cli.py bench
+
 # start the REST API server (default: http://127.0.0.1:8000)
 python3 cli.py serve
 # then open http://127.0.0.1:8000 in a browser for the upload + ask page
@@ -232,15 +235,16 @@ level live in a config file instead of in code — copy
   "paths":     {"index_file": "index.json", "store_file": "documind.db",
                 "data_dir": "data"},
   "retrieval": {"default_method": "tfidf", "search_k": 5, "ask_k": 3,
-                "chunk_size": 500, "chunk_overlap": 80},
+                "chunk_size": 500, "chunk_overlap": 80,
+                "query_cache_size": 128},
   "logging":   {"level": "INFO", "file": null, "json": true}
 }
 ```
 
 Precedence: environment variables (`DOCUMIND_HOST`, `DOCUMIND_PORT`,
 `DOCUMIND_INDEX_FILE`, `DOCUMIND_STORE_FILE`, `DOCUMIND_DATA_DIR`,
-`DOCUMIND_LOG_LEVEL`, `DOCUMIND_LOG_FILE`) beat the file, which beats
-the built-in defaults. Pass an explicit file with `cli.py --config
+`DOCUMIND_QUERY_CACHE_SIZE`, `DOCUMIND_LOG_LEVEL`, `DOCUMIND_LOG_FILE`)
+beat the file, which beats the built-in defaults. Pass an explicit file with `cli.py --config
 FILE <command>` or `DOCUMIND_CONFIG=FILE`; `cli.py config` prints the
 effective config. Unknown keys and out-of-range values are rejected
 at startup with a plain-language error, so a typo fails loudly
@@ -253,6 +257,35 @@ fields — the server logs one `http_access` line per request
 `reindex` / `startup` events. Query strings are never logged: search
 queries and questions are user content. Set `"json": false` for
 plain-text logs.
+
+## Performance
+
+Both rankers score through an inverted index (term → chunks
+containing it), so a query only touches chunks that share one of
+its terms instead of scanning the whole corpus, and BM25 tokenises
+the query once instead of once per document. Repeated searches are
+served from a bounded LRU query cache (default 128 entries,
+`retrieval.query_cache_size` in the config, `0` disables it), keyed
+by the normalised query + `k` + method and invalidated whenever the
+index changes; `GET /stats` reports its hits, misses and evictions.
+Neither change alters results: chunks with no shared query term
+score 0.0 and are filtered out either way — the evaluation table
+above is unchanged.
+
+`python3 cli.py bench` measures it on the sample corpus scaled to
+300 documents / 1400 chunks (near-duplicate copies: a load test for
+speed, not quality), 12 questions, `k=5`:
+
+| method   | cold ms / search | warm ms / search | speedup |
+|----------|------------------|------------------|---------|
+| tfidf    | 1.210            | 0.004            | 278.9x  |
+| bm25     | 2.327            | 0.004            | 541.2x  |
+| combined | 1.723            | 0.004            | 392.3x  |
+
+Cold (cache-miss) search is also faster than the old full scan on
+the same corpus: TF-IDF 1.67 → 0.90 ms/search, BM25 4.90 → 0.96
+ms/search (best of 20 runs). Index build, including the inverted
+index, takes ~186 ms for those 1400 chunks.
 
 ## Tech notes
 
@@ -276,7 +309,9 @@ plain-text logs.
 documind/     core package: chunker, embeddings, bm25, index, rerank,
               qa, ingest, store, evaluate, server (REST API), web (UI page),
               config (config file + env overrides),
-              logging_config (structured JSON logging)
+              logging_config (structured JSON logging),
+              cache (bounded LRU query cache),
+              benchmark (build / cold / warm search timings)
 cli.py        command-line interface
 config.example.json  documented config file (copy to config.json to use)
 data/         sample documents the demo runs on
