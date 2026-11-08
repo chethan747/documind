@@ -8,6 +8,30 @@ follow [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Index caching + performance pass (Day 18): both rankers now score
+  through an inverted index — TF-IDF via term postings over the
+  fitted vectors, BM25 via document postings with the query
+  tokenised once instead of once per document — and repeated
+  searches are served from a bounded LRU query cache
+  (`documind/cache.py`, keyed by normalised query + `k` + method,
+  invalidated on any index change, returning copies so callers
+  cannot poison it). New `retrieval.query_cache_size` config value
+  (default 128, 0 disables, 0..10000) with a
+  `DOCUMIND_QUERY_CACHE_SIZE` environment override; `GET /stats`
+  reports the cache counters; `documind/benchmark.py` and `cli.py
+  bench` time build, cold and warm searches per method. Results are
+  unchanged: the evaluation table is identical and inverted-index
+  scores match a brute-force reference. Measured on 300 documents /
+  1400 chunks (near-duplicate copies of the sample corpus): cold
+  1.210 / 2.327 / 1.723 ms per search vs warm 0.004 ms (279–541x)
+  for tfidf / bm25 / combined; cold vs the old full scan: TF-IDF
+  1.67 -> 0.90 ms, BM25 4.90 -> 0.96 ms. Test suite now 300 tests,
+  including `tests/test_performance.py`.
+- GitHub Actions CI (Day 17): `.github/workflows/ci.yml` runs the
+  tests on Python 3.10, 3.11 and 3.12 for every push / pull request
+  to main, then smoke-checks `cli.py eval --all-methods`; nothing to
+  install, the project is pure stdlib. Test suite now 256 tests,
+  including `tests/test_ci.py` validating the workflow.
 - Docker packaging (Day 16): `Dockerfile` (Python 3.12 slim, no
   dependencies to install, non-root `documind` user, `/health`
   healthcheck, state in `/data`) and `docker-compose.yml` (builds the
