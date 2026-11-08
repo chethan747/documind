@@ -168,7 +168,27 @@ Intelligence Platform by Day 21.
       demo verified: the CI commands run cleanly locally — compile
       0, full suite 256 OK, eval all methods hit rate 1.000, MRR
       1.000, QA citation 1.000, QA terms 0.917.)
-- [ ] **Day 18** — Index caching + performance pass
+- [x] **Day 18** — Index caching + performance pass
+      (cache.py: bounded LRU cache with hit/miss/eviction stats;
+      index.py: TF-IDF inverted index (term -> chunks) so a query
+      only scores chunks sharing a query term, plus a query-result
+      LRU cache keyed by normalised query + k + method, invalidated
+      on any index change and returning copies so callers cannot
+      poison it; bm25.py: document postings + single query
+      tokenisation in score_all; config gains
+      retrieval.query_cache_size (default 128, 0 disables, 0..10000)
+      with DOCUMIND_QUERY_CACHE_SIZE override; server /stats
+      reports the cache counters; benchmark.py + `cli.py bench`
+      time build, cold and warm searches per method. Results are
+      unchanged — eval still 1.000 / 1.000 / 1.000 / 0.917 on all
+      methods, and inverted-index scores match brute force exactly.
+      44 new tests in tests/test_performance.py, suite now 300
+      tests. Live demo verified: `bench` on 300 docs / 1400 chunks
+      (x100 near-duplicate copies) — cold 1.210 / 2.327 / 1.723 ms
+      per search vs warm 0.004 ms (279–541x) for tfidf / bm25 /
+      combined; cold vs the old full scan: TF-IDF 1.67 -> 0.90 ms,
+      BM25 4.90 -> 0.96 ms; server /stats shows the cache with a
+      repeat search counted as a hit.)
 - [ ] **Day 19** — README polish with screenshots / demo output
 - [ ] **Day 20** — Final evaluation run, results documented
 - [ ] **Day 21** — v1.0 release notes + RESUME.md with resume bullet points
