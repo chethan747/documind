@@ -40,6 +40,19 @@ class BM25Scorer:
         self.doc_lengths_ = []     # tokens per document, parallel to corpus
         self.doc_term_freqs_ = []  # list of {term: count} per document
         self.idf_ = {}             # term -> idf weight
+        self.postings_ = {}        # term -> [(doc_index, term count)]
+        # Day 18: an inverted index over the fitted corpus. score_all
+        # only touches documents that share a query term instead of
+        # scoring every document for every query; documents with no
+        # query term score 0.0 either way, so results are unchanged.
+
+    def _build_postings(self):
+        """(Re)build the inverted index from ``doc_term_freqs_``."""
+        postings = {}
+        for doc_index, counts in enumerate(self.doc_term_freqs_):
+            for term, tf in counts.items():
+                postings.setdefault(term, []).append((doc_index, tf))
+        self.postings_ = postings
 
     def fit(self, documents):
         """Learn document frequencies, lengths and idf from ``documents``."""
@@ -61,6 +74,7 @@ class BM25Scorer:
             term: math.log(1.0 + (n - freq + 0.5) / (freq + 0.5))
             for term, freq in df.items()
         }
+        self._build_postings()
         return self
 
     def score(self, query, doc_index):
@@ -82,8 +96,29 @@ class BM25Scorer:
         return total
 
     def score_all(self, query):
-        """BM25 scores of ``query`` against every fitted document."""
-        return [self.score(query, i) for i in range(self.n_documents_)]
+        """BM25 scores of ``query`` against every fitted document.
+
+        The query is tokenised once (Day 18: the old version
+        re-tokenised it inside :meth:`score` for every document),
+        and only documents sharing at least one query term are
+        scored — the rest score 0.0 by definition, so the returned
+        list is identical to scoring every document, just faster.
+        """
+        scores = [0.0] * self.n_documents_
+        if not self.doc_term_freqs_ or self.avgdl_ == 0.0:
+            return scores
+        for term in set(tokenize(query)):
+            postings = self.postings_.get(term)
+            if not postings:
+                continue
+            idf = self.idf_.get(term, 0.0)
+            for doc_index, tf in postings:
+                dl = self.doc_lengths_[doc_index]
+                norm = 1.0 - self.b + self.b * (dl / self.avgdl_)
+                scores[doc_index] += (
+                    idf * (tf * (self.k1 + 1.0))
+                    / (tf + self.k1 * norm))
+        return scores
 
     def to_dict(self):
         return {"k1": self.k1,
@@ -105,4 +140,8 @@ class BM25Scorer:
             for counts in data["doc_term_freqs"]
         ]
         scorer.idf_ = dict(data["idf"])
+        # Postings are not persisted (they rebuild cheaply from the
+        # term frequencies); indexes saved before Day 18 load the
+        # same way.
+        scorer._build_postings()
         return scorer
