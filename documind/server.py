@@ -132,9 +132,10 @@ class DocuMindApp:
         self.index = self._load_index()
 
     def _load_index(self):
+        cache_size = self.config["retrieval"]["query_cache_size"]
         if os.path.exists(self.index_path):
-            return Index.load(self.index_path)
-        index = Index()
+            return Index.load(self.index_path, cache_size=cache_size)
+        index = Index(cache_size=cache_size)
         for doc in self.store.list_documents():
             index.add_document(doc["doc_id"], doc["content"],
                                metadata=_index_metadata(doc))
@@ -153,7 +154,8 @@ class DocuMindApp:
         docs = self.store.list_documents()
         return {"documents": len(docs),
                 "chunks": len(self.index),
-                "index_present": os.path.exists(self.index_path)}
+                "index_present": os.path.exists(self.index_path),
+                "cache": self.index.cache_info()}
 
     def ingest_text(self, doc_id, title, text):
         """Add or update one document given as raw text.
@@ -319,7 +321,8 @@ class DocuMindApp:
         overlap are kept from the current index.
         """
         previous_chunks = len(self.index)
-        index = Index(self.index.chunk_size, self.index.overlap)
+        index = Index(self.index.chunk_size, self.index.overlap,
+                      cache_size=self.index.cache_size)
         docs = self.store.list_documents()
         for doc in docs:
             num_chunks = index.add_document(
