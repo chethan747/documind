@@ -2,14 +2,15 @@
 
 Everything DocuMind used to hard-code — the server host and port, the
 index/store file locations, the default ranking method and retrieval
-cutoffs, the chunk size, and the log level — now lives in one place and
-can be changed without editing code.
+cutoffs, the chunk size, the query-cache size, and the log level — now
+lives in one place and can be changed without editing code.
 
 Precedence, highest first:
 
 1. Environment variables — ``DOCUMIND_HOST``, ``DOCUMIND_PORT``,
    ``DOCUMIND_INDEX_FILE``, ``DOCUMIND_STORE_FILE``,
-   ``DOCUMIND_DATA_DIR``, ``DOCUMIND_LOG_LEVEL``, ``DOCUMIND_LOG_FILE``.
+   ``DOCUMIND_DATA_DIR``, ``DOCUMIND_QUERY_CACHE_SIZE``,
+   ``DOCUMIND_LOG_LEVEL``, ``DOCUMIND_LOG_FILE``.
    The path variables exist so a container (Day 16) can point the
    index, the store and the data directory at a mounted volume
    without shipping a config file; they work anywhere, not just in
@@ -54,6 +55,7 @@ DEFAULT_CONFIG = {
         "ask_k": 3,
         "chunk_size": 500,
         "chunk_overlap": 80,
+        "query_cache_size": 128,
     },
     "logging": {
         "level": "INFO",
@@ -70,6 +72,7 @@ _ENV_OVERRIDES = {
     ("paths", "index_file"): "DOCUMIND_INDEX_FILE",
     ("paths", "store_file"): "DOCUMIND_STORE_FILE",
     ("paths", "data_dir"): "DOCUMIND_DATA_DIR",
+    ("retrieval", "query_cache_size"): "DOCUMIND_QUERY_CACHE_SIZE",
     ("logging", "level"): "DOCUMIND_LOG_LEVEL",
     ("logging", "file"): "DOCUMIND_LOG_FILE",
 }
@@ -130,6 +133,8 @@ def _validate(config):
         _fail("retrieval.chunk_overlap (%d) must be smaller than "
               "retrieval.chunk_size (%d)"
               % (retrieval["chunk_overlap"], retrieval["chunk_size"]))
+    _check_int(retrieval["query_cache_size"], "retrieval",
+               "query_cache_size", low=0, high=10000)
 
     logging_cfg = config["logging"]
     if logging_cfg["level"] not in LOG_LEVELS:
@@ -177,7 +182,7 @@ def _apply_env_overrides(config, env=None):
         raw = env.get(var)
         if raw is None or raw == "":
             continue
-        if key == "port":
+        if key in ("port", "query_cache_size"):
             try:
                 value = int(raw)
             except ValueError:
