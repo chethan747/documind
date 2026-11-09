@@ -8,6 +8,23 @@ follow [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- README polish (Day 19): a "Demo output" section with verbatim
+  transcripts of `cli.py demo`, `cli.py eval --all-methods` and a
+  live `POST /qa` call (health + structured citations), an
+  "Evaluation" section with the real 12-question results table
+  (all methods 1.000 / 1.000 / 1.000 / 0.917, with the question 9
+  term miss explained), the stale "next are CI" roadmap line
+  corrected, a Day 18 performance entry added to the feature list,
+  and the benchmark table refreshed from a new `cli.py bench` run
+  (cold 1.054 / 0.998 / 1.626 ms vs warm 0.004 ms for tfidf / bm25 /
+  combined; timings now labelled as a sample run that varies by
+  machine). No screenshots: no headless-browser tooling is
+  available on the build machine, so the README says so and shows
+  the web UI's behaviour through the API instead. 10 new tests in
+  `tests/test_readme.py` re-run demo/eval and a live server in a
+  scratch copy and check the README's quoted output, evaluation
+  table, links and section list against them. Test suite now 310
+  tests.
 - Index caching + performance pass (Day 18): both rankers now score
   through an inverted index — TF-IDF via term postings over the
   fitted vectors, BM25 via document postings with the query
