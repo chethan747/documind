@@ -14,7 +14,7 @@ easy to study.
 
 ## Features
 
-**Done (v0.2 — API + web app)**
+**Done so far (v0.2 released 2026-11-04; Days 1–18 of 21)**
 
 - [x] Overlapping, sentence-aware text chunker
 - [x] TF-IDF vectoriser built from scratch (tokenisation, idf, sparse vectors)
@@ -93,10 +93,22 @@ easy to study.
       end-to-end smoke run of the evaluation harness — no
       dependencies to install, the project is pure standard library
 
+- [x] Index caching + performance pass (Day 18): both rankers score
+      through an inverted index (term → chunks), so a query only
+      touches chunks sharing one of its terms, and repeated searches
+      are served from a bounded LRU query cache (default 128 entries,
+      `retrieval.query_cache_size` in the config, `0` disables it);
+      `GET /stats` reports cache hits, misses and evictions, and
+      `python3 cli.py bench` measures build, cold and warm search
+      timings. Results are unchanged: the evaluation table below is
+      identical and inverted-index scores match a brute-force
+      reference exactly
+
 **Roadmap** — see [ROADMAP.md](ROADMAP.md) for the full 21-day plan
 and [CHANGELOG.md](CHANGELOG.md) for release notes: Weeks 1–2 are
-complete and v0.2 (API + web app) is released; Docker packaging is
-done, next are CI, and a v1.0 release.
+complete and v0.2 (API + web app) is released; Docker packaging, CI
+and the performance pass are done. Remaining: README polish (Day 19),
+a final evaluation run (Day 20) and the v1.0 release (Day 21).
 
 ## Architecture
 
@@ -162,6 +174,96 @@ python3 cli.py bench
 python3 cli.py serve
 # then open http://127.0.0.1:8000 in a browser for the upload + ask page
 ```
+
+## Demo output
+
+Everything below is the verbatim output of the commands above, run
+against the sample documents in `data/` (3 documents, 14 chunks).
+No screenshots are included — the web UI is the same upload + ask
+page the API serves at `GET /`, and its behaviour is shown here
+through the API instead.
+
+```console
+$ python3 cli.py demo
+ingested aem-basics.md          -> added
+ingested java-spring.md         -> added
+ingested ml-basics.md           -> added
+3 file(s) seen, 3 document(s) added, 14 chunk(s) indexed
+
+Q: What is AEM built on?
+A: AEM is built on three open technologies from the Apache Software Foundation. [aem-basics.md] AEM has two main run modes. [aem-basics.md]
+Sources:
+  - aem basics (chunk 0, score 0.2702)
+  - aem basics (chunk 1, score 0.2327)
+  - aem basics (chunk 3, score 0.0801)
+
+Q: What does Spring Boot auto-configuration do?
+A: Its best-known feature is auto-configuration: Spring Boot inspects the libraries on the classpath and the properties the developer has set, and then configures beans automatically — for example, if an embedded database driver is present, it sets up a data source without manual XML or Java configuration. [java-spring.md] A typical Spring Boot web application uses Spring MVC to expose REST endpoints: classes annotated with @RestController map HTTP requests to methods, and responses are serialised to JSON automatically. [java-spring.md] Spring Boot builds on Spring to make standalone applications easy to create and run. [java-spring.md]
+Sources:
+  - java spring (chunk 1, score 0.4257)
+  - java spring (chunk 2, score 0.2773)
+  - java spring (chunk 0, score 0.2138)
+
+Q: What is overfitting in machine learning?
+A: # Machine Learning Basics Machine learning is a branch of artificial intelligence in which a model learns patterns from data instead of being programmed with explicit rules. [ml-basics.md] regularisation and simply collecting more data help to reduce overfitting. Modern machine learning systems often represent text, images and other inputs as embeddings — dense numerical vectors in which similar items sit close together. [ml-basics.md] Techniques such as cross-validation, regularisation and simply collecting more data help to reduce overfitting. [ml-basics.md]
+Sources:
+  - ml basics (chunk 0, score 0.3757)
+  - ml basics (chunk 3, score 0.3210)
+  - ml basics (chunk 2, score 0.1704)
+```
+
+The same question over the API, with structured citations
+(`POST /qa`, response pretty-printed; the second and third
+citations are trimmed here, the full response carries all three):
+
+```console
+$ curl -s localhost:8000/health
+{"status": "ok", "version": "0.2.0", "documents": 3, "chunks": 14}
+
+$ curl -s -X POST localhost:8000/qa -H 'Content-Type: application/json' \
+    -d '{"question": "What is AEM built on?"}' | python3 -m json.tool
+{
+    "question": "What is AEM built on?",
+    "method": "tfidf",
+    "rerank": true,
+    "answer": "AEM is built on three open technologies from the Apache Software Foundation. [aem-basics.md] AEM has two main run modes. [aem-basics.md]",
+    "citations": [
+        {
+            "doc_id": "aem-basics.md",
+            "title": "aem basics",
+            "chunk_index": 0,
+            "score": 0.2702,
+            "snippet": "AEM is built on three open technologies from the Apache Software Foundation.",
+            "citation": "[aem-basics.md, chunk 0]",
+            "rerank_score": 0.9375
+        }
+        // ... two more citations (chunks 1 and 3) follow
+    ],
+    "source_count": 3
+}
+```
+
+## Evaluation
+
+`python3 cli.py eval --all-methods` scores the pipeline on the
+12-question sample set in `eval/eval_qa.json` (grounded in the
+sample documents, with the expected source document and answer
+terms per question). Hit rate and MRR are measured at k=5; QA
+citation rate is the share of answers carrying a citation, QA
+term rate the share of expected answer terms present in the
+answer:
+
+| method   | hit rate@5 | MRR@5 | QA citation | QA terms |
+|----------|-----------:|------:|------------:|---------:|
+| tfidf    | 1.000      | 1.000 | 1.000       | 0.917    |
+| bm25     | 1.000      | 1.000 | 1.000       | 0.917    |
+| combined | 1.000      | 1.000 | 1.000       | 0.917    |
+
+All three methods agree on this small set. The one QA term miss
+is question 9 (overfitting), whose answer quotes the
+cross-validation sentence rather than the memorisation
+definition — the retrieval is right, the extractive answer just
+picks a neighbouring sentence.
 
 ## Run with Docker
 
@@ -274,18 +376,19 @@ above is unchanged.
 
 `python3 cli.py bench` measures it on the sample corpus scaled to
 300 documents / 1400 chunks (near-duplicate copies: a load test for
-speed, not quality), 12 questions, `k=5`:
+speed, not quality), 12 questions, `k=5`. Timings are from a sample
+run and vary by machine and load — rerun `bench` to measure yours:
 
 | method   | cold ms / search | warm ms / search | speedup |
 |----------|------------------|------------------|---------|
-| tfidf    | 1.210            | 0.004            | 278.9x  |
-| bm25     | 2.327            | 0.004            | 541.2x  |
-| combined | 1.723            | 0.004            | 392.3x  |
+| tfidf    | 1.054            | 0.004            | 244.9x  |
+| bm25     | 0.998            | 0.004            | 227.4x  |
+| combined | 1.626            | 0.004            | 375.9x  |
 
 Cold (cache-miss) search is also faster than the old full scan on
 the same corpus: TF-IDF 1.67 → 0.90 ms/search, BM25 4.90 → 0.96
 ms/search (best of 20 runs). Index build, including the inverted
-index, takes ~186 ms for those 1400 chunks.
+index, takes ~175 ms for those 1400 chunks.
 
 ## Tech notes
 
