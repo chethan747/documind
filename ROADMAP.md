@@ -189,7 +189,20 @@ Intelligence Platform by Day 21.
       combined; cold vs the old full scan: TF-IDF 1.67 -> 0.90 ms,
       BM25 4.90 -> 0.96 ms; server /stats shows the cache with a
       repeat search counted as a hit.)
-- [ ] **Day 19** — README polish with screenshots / demo output
+- [x] **Day 19** — README polish with screenshots / demo output
+      (new "Demo output" section with verbatim transcripts of
+      `cli.py demo`, `cli.py eval --all-methods` and a live
+      `POST /qa` call; new "Evaluation" section with the real
+      12-question results table and the question 9 term miss
+      explained; stale "next are CI" roadmap line corrected; Day 18
+      performance entry added to the feature list; benchmark table
+      refreshed from a new `cli.py bench` run and labelled as a
+      sample run. No screenshots: no headless-browser tooling is
+      available on the build machine, so the README says so and
+      shows the web UI through the API instead. 10 new tests in
+      tests/test_readme.py re-run demo/eval and a live server in a
+      scratch copy and verify the quoted output, evaluation table,
+      links and sections; suite now 310 tests.)
 - [ ] **Day 20** — Final evaluation run, results documented
 - [ ] **Day 21** — v1.0 release notes + RESUME.md with resume bullet points
       and project description
