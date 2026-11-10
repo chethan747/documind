@@ -14,7 +14,7 @@ easy to study.
 
 ## Features
 
-**Done so far (v0.2 released 2026-11-04; Days 1–18 of 21)**
+**Done so far (v0.2 released 2026-11-04; Days 1–20 of 21)**
 
 - [x] Overlapping, sentence-aware text chunker
 - [x] TF-IDF vectoriser built from scratch (tokenisation, idf, sparse vectors)
@@ -104,11 +104,26 @@ easy to study.
       identical and inverted-index scores match a brute-force
       reference exactly
 
+- [x] README polish (Day 19): verbatim demo/eval/API transcripts and
+      the real evaluation table, with the question 9 term miss
+      explained; no screenshots, as none can be produced on the
+      build machine
+
+- [x] Final evaluation run (Day 20): the harness re-run on the
+      finished pipeline with a per-question breakdown and cutoff
+      sensitivity (k=1, 3, 5, 10) — see
+      [EVALUATION.md](EVALUATION.md); the machine-readable report is
+      `eval/final_report.json`. Headline numbers unchanged since Day 6
+      (hit rate 1.000, MRR 1.000, QA citation 1.000, QA terms 0.917);
+      the one new finding is that at k=1 the QA term rate falls to
+      0.667 for TF-IDF/combined while BM25 holds 0.917 — the shipped
+      k=3 default avoids it
+
 **Roadmap** — see [ROADMAP.md](ROADMAP.md) for the full 21-day plan
 and [CHANGELOG.md](CHANGELOG.md) for release notes: Weeks 1–2 are
-complete and v0.2 (API + web app) is released; Docker packaging, CI
-and the performance pass are done. Remaining: README polish (Day 19),
-a final evaluation run (Day 20) and the v1.0 release (Day 21).
+complete and v0.2 (API + web app) is released; Docker packaging, CI,
+the performance pass, the README polish and the final evaluation run
+are done. Remaining: the v1.0 release (Day 21).
 
 ## Architecture
 
@@ -265,6 +280,11 @@ cross-validation sentence rather than the memorisation
 definition — the retrieval is right, the extractive answer just
 picks a neighbouring sentence.
 
+The full final report — per-question breakdown, cutoff sensitivity
+(k=1, 3, 5, 10), findings and limitations — is in
+[EVALUATION.md](EVALUATION.md); the machine-readable headline run is
+`eval/final_report.json`.
+
 ## Run with Docker
 
 The image is Python 3.12 slim plus the source — DocuMind has no
@@ -418,7 +438,11 @@ documind/     core package: chunker, embeddings, bm25, index, rerank,
 cli.py        command-line interface
 config.example.json  documented config file (copy to config.json to use)
 data/         sample documents the demo runs on
-eval/         sample Q&A set for the evaluation harness
+eval/         sample Q&A set for the evaluation harness, plus the
+              machine-readable final report (final_report.json)
+EVALUATION.md final evaluation report (Day 20): headline results,
+              per-question breakdown, cutoff sensitivity, findings
+              and limitations
 tests/        unittest suite
 .github/workflows/ci.yml  GitHub Actions: tests on Python 3.10–3.12
               for every push / pull request to main
