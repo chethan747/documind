@@ -1,0 +1,656 @@
+[
+  {
+    "method": "tfidf",
+    "k": 5,
+    "n": 12,
+    "hit_rate": 1.0,
+    "mrr": 1.0,
+    "qa_citation_rate": 1.0,
+    "qa_term_rate": 0.9166666666666666,
+    "results": [
+      {
+        "id": "q1",
+        "question": "What is AEM built on?",
+        "expected_doc_id": "aem-basics.md",
+        "retrieved_doc_ids": [
+          "aem-basics.md",
+          "aem-basics.md",
+          "aem-basics.md"
+        ],
+        "rank": 1,
+        "hit": true,
+        "reciprocal_rank": 1.0,
+        "qa_cited_expected": true,
+        "qa_term_hit": true,
+        "answer": "AEM is built on three open technologies from the Apache Software Foundation. [aem-basics.md] AEM has two main run modes. [aem-basics.md]"
+      },
+      {
+        "id": "q2",
+        "question": "What does the dispatcher do in AEM?",
+        "expected_doc_id": "aem-basics.md",
+        "retrieved_doc_ids": [
+          "aem-basics.md",
+          "aem-basics.md",
+          "aem-basics.md",
+          "aem-basics.md"
+        ],
+        "rank": 1,
+        "hit": true,
+        "reciprocal_rank": 1.0,
+        "qa_cited_expected": true,
+        "qa_term_hit": true,
+        "answer": "AEM is built on three open technologies from the Apache Software Foundation. [aem-basics.md] A replication step copies approved content from author to publish, and a dispatcher, typically an Apache HTTP server module, caches published pages and protects the publish instances from unnecessary load. [aem-basics.md] AEM has two main run modes. [aem-basics.md]"
+      },
+      {
+        "id": "q3",
+        "question": "What is HTL used for in AEM?",
+        "expected_doc_id": "aem-basics.md",
+        "retrieved_doc_ids": [
+          "aem-basics.md",
+          "aem-basics.md",
+          "aem-basics.md",
+          "ml-basics.md",
+          "ml-basics.md"
+        ],
+        "rank": 1,
+        "hit": true,
+        "reciprocal_rank": 1.0,
+        "qa_cited_expected": true,
+        "qa_term_hit": true,
+        "answer": "It is part of the Adobe Experience Cloud and is widely used by large organisations to manage digital experiences across many sites and languages from a single platform. AEM is built on three open technologies from the Apache Software Foundation. [aem-basics.md] Server-side rendering of components commonly uses HTL, the HTML Template Language, together with Sling Models, which are Java classes that expose repository data to the template in a clean, testable way. AEM has two main run modes. [aem-basics.md] AEM is built on three open technologies from the Apache Software Foundation. [aem-basics.md] Data scientists split their data into a training set, used to fit the model, and a held-out test set, used to estimate how well the model generalises to unseen data. [ml-basics.md] test set, used to estimate how well the model generalises to unseen data. [ml-basics.md]"
+      },
+      {
+        "id": "q4",
+        "question": "What is the difference between AEM author and publish instances?",
+        "expected_doc_id": "aem-basics.md",
+        "retrieved_doc_ids": [
+          "aem-basics.md",
+          "aem-basics.md",
+          "aem-basics.md",
+          "ml-basics.md",
+          "aem-basics.md"
+        ],
+        "rank": 1,
+        "hit": true,
+        "reciprocal_rank": 1.0,
+        "qa_cited_expected": true,
+        "qa_term_hit": true,
+        "answer": "A replication step copies approved content from author to publish, and a dispatcher, typically an Apache HTTP server module, caches published pages and protects the publish instances from unnecessary load. [aem-basics.md] AEM has two main run modes. The author instance is where editors create and preview content, and the publish instance is the one that serves live traffic. [aem-basics.md] AEM is built on three open technologies from the Apache Software Foundation. [aem-basics.md] Embeddings power semantic search: a question and a passage can be compared by the distance between their vectors, which is the idea behind retrieval-augmented generation, where the most relevant passages are fetched first and then handed to a language model so its answer is grounded in real documents. [ml-basics.md]"
+      },
+      {
+        "id": "q5",
+        "question": "What does Spring Boot auto-configuration do?",
+        "expected_doc_id": "java-spring.md",
+        "retrieved_doc_ids": [
+          "java-spring.md",
+          "java-spring.md",
+          "java-spring.md",
+          "java-spring.md"
+        ],
+        "rank": 1,
+        "hit": true,
+        "reciprocal_rank": 1.0,
+        "qa_cited_expected": true,
+        "qa_term_hit": true,
+        "answer": "Its best-known feature is auto-configuration: Spring Boot inspects the libraries on the classpath and the properties the developer has set, and then configures beans automatically \u2014 for example, if an embedded database driver is present, it sets up a data source without manual XML or Java configuration. [java-spring.md] A typical Spring Boot web application uses Spring MVC to expose REST endpoints: classes annotated with @RestController map HTTP requests to methods, and responses are serialised to JSON automatically. [java-spring.md] Spring Boot builds on Spring to make standalone applications easy to create and run. [java-spring.md] Spring Boot Actuator adds production-ready features such as health checks, metrics and environment information over HTTP endpoints, which operations teams use to monitor running applications. [java-spring.md]"
+      },
+      {
+        "id": "q6",
+        "question": "How does Spring MVC expose REST endpoints?",
+        "expected_doc_id": "java-spring.md",
+        "retrieved_doc_ids": [
+          "java-spring.md",
+          "java-spring.md",
+          "java-spring.md",
+          "java-spring.md",
+          "aem-basics.md"
+        ],
+        "rank": 1,
+        "hit": true,
+        "reciprocal_rank": 1.0,
+        "qa_cited_expected": true,
+        "qa_term_hit": true,
+        "answer": "A typical Spring Boot web application uses Spring MVC to expose REST endpoints: classes annotated with @RestController map HTTP requests to methods, and responses are serialised to JSON automatically. [java-spring.md] Spring Boot Actuator adds production-ready features such as health checks, metrics and environment information over HTTP endpoints, which operations teams use to monitor running applications. [java-spring.md] # Java and the Spring Framework Spring is the most widely used framework for building enterprise Java applications. [java-spring.md] Boot builds on Spring to make standalone applications easy to create and run. [java-spring.md] Server-side rendering of components commonly uses HTL, the HTML Template Language, together with Sling Models, which are Java classes that expose repository data to the template in a clean, testable way. [aem-basics.md]"
+      },
+      {
+        "id": "q7",
+        "question": "What is dependency injection in Spring?",
+        "expected_doc_id": "java-spring.md",
+        "retrieved_doc_ids": [
+          "java-spring.md",
+          "java-spring.md",
+          "java-spring.md",
+          "java-spring.md"
+        ],
+        "rank": 1,
+        "hit": true,
+        "reciprocal_rank": 1.0,
+        "qa_cited_expected": true,
+        "qa_term_hit": true,
+        "answer": "# Java and the Spring Framework Spring is the most widely used framework for building enterprise Java applications. At its core is the Inversion of Control container, which creates objects and wires them together through dependency injection, so classes declare the collaborators they need instead of constructing them. [java-spring.md] Spring Data JPA simplifies database access by generating repository implementations from interface method names. [java-spring.md] Boot builds on Spring to make standalone applications easy to create and run. [java-spring.md] Spring Boot Actuator adds production-ready features such as health checks, metrics and environment information over HTTP endpoints, which operations teams use to monitor running applications. [java-spring.md]"
+      },
+      {
+        "id": "q8",
+        "question": "What does Spring Boot Actuator provide?",
+        "expected_doc_id": "java-spring.md",
+        "retrieved_doc_ids": [
+          "java-spring.md",
+          "java-spring.md",
+          "java-spring.md",
+          "java-spring.md"
+        ],
+        "rank": 1,
+        "hit": true,
+        "reciprocal_rank": 1.0,
+        "qa_cited_expected": true,
+        "qa_term_hit": true,
+        "answer": "Spring Boot Actuator adds production-ready features such as health checks, metrics and environment information over HTTP endpoints, which operations teams use to monitor running applications. [java-spring.md] Spring Boot builds on Spring to make standalone applications easy to create and run. [java-spring.md] A typical Spring Boot web application uses Spring MVC to expose REST endpoints: classes annotated with @RestController map HTTP requests to methods, and responses are serialised to JSON automatically. [java-spring.md] Its best-known feature is auto-configuration: Spring Boot inspects the libraries on the classpath and the properties the developer has set, and then configures beans automatically \u2014 for example, if an embedded database driver is present, it sets up a data source without manual XML or Java configuration. [java-spring.md]"
+      },
+      {
+        "id": "q9",
+        "question": "What is overfitting in machine learning?",
+        "expected_doc_id": "ml-basics.md",
+        "retrieved_doc_ids": [
+          "ml-basics.md",
+          "ml-basics.md",
+          "ml-basics.md",
+          "ml-basics.md"
+        ],
+        "rank": 1,
+        "hit": true,
+        "reciprocal_rank": 1.0,
+        "qa_cited_expected": true,
+        "qa_term_hit": false,
+        "answer": "# Machine Learning Basics Machine learning is a branch of artificial intelligence in which a model learns patterns from data instead of being programmed with explicit rules. [ml-basics.md] regularisation and simply collecting more data help to reduce overfitting. Modern machine learning systems often represent text, images and other inputs as embeddings \u2014 dense numerical vectors in which similar items sit close together. [ml-basics.md] Techniques such as cross-validation, regularisation and simply collecting more data help to reduce overfitting. [ml-basics.md] In unsupervised learning the data has no labels, and the model instead finds structure, such as grouping customers into clusters with similar behaviour. [ml-basics.md]"
+      },
+      {
+        "id": "q10",
+        "question": "How do supervised and unsupervised learning differ?",
+        "expected_doc_id": "ml-basics.md",
+        "retrieved_doc_ids": [
+          "ml-basics.md",
+          "ml-basics.md",
+          "ml-basics.md"
+        ],
+        "rank": 1,
+        "hit": true,
+        "reciprocal_rank": 1.0,
+        "qa_cited_expected": true,
+        "qa_term_hit": true,
+        "answer": "In supervised learning, the training data is labelled with the correct answers, and the model learns to predict those labels for new inputs \u2014 for example, classifying an email as spam or not spam. [ml-basics.md] In unsupervised learning the data has no labels, and the model instead finds structure, such as grouping customers into clusters with similar behaviour. [ml-basics.md] Modern machine learning systems often represent text, images and other inputs as embeddings \u2014 dense numerical vectors in which similar items sit close together. [ml-basics.md]"
+      },
+      {
+        "id": "q11",
+        "question": "What are embeddings used for in machine learning?",
+        "expected_doc_id": "ml-basics.md",
+        "retrieved_doc_ids": [
+          "ml-basics.md",
+          "ml-basics.md",
+          "ml-basics.md",
+          "ml-basics.md",
+          "ml-basics.md"
+        ],
+        "rank": 1,
+        "hit": true,
+        "reciprocal_rank": 1.0,
+        "qa_cited_expected": true,
+        "qa_term_hit": true,
+        "answer": "Modern machine learning systems often represent text, images and other inputs as embeddings \u2014 dense numerical vectors in which similar items sit close together. [ml-basics.md] # Machine Learning Basics Machine learning is a branch of artificial intelligence in which a model learns patterns from data instead of being programmed with explicit rules. [ml-basics.md] embeddings \u2014 dense numerical vectors in which similar items sit close together. [ml-basics.md] In unsupervised learning the data has no labels, and the model instead finds structure, such as grouping customers into clusters with similar behaviour. Data scientists split their data into a training set, used to fit the model, and a held-out test set, used to estimate how well the model generalises to unseen data. [ml-basics.md] test set, used to estimate how well the model generalises to unseen data. [ml-basics.md]"
+      },
+      {
+        "id": "q12",
+        "question": "Why split data into training and test sets?",
+        "expected_doc_id": "ml-basics.md",
+        "retrieved_doc_ids": [
+          "ml-basics.md",
+          "ml-basics.md",
+          "java-spring.md",
+          "ml-basics.md",
+          "java-spring.md"
+        ],
+        "rank": 1,
+        "hit": true,
+        "reciprocal_rank": 1.0,
+        "qa_cited_expected": true,
+        "qa_term_hit": true,
+        "answer": "Data scientists split their data into a training set, used to fit the model, and a held-out test set, used to estimate how well the model generalises to unseen data. [ml-basics.md] test set, used to estimate how well the model generalises to unseen data. This matters because of overfitting: a model that memorises the training examples, including their noise, can perform very well on the training set yet badly on new data. [ml-basics.md] Its best-known feature is auto-configuration: Spring Boot inspects the libraries on the classpath and the properties the developer has set, and then configures beans automatically \u2014 for example, if an embedded database driver is present, it sets up a data source without manual XML or Java configuration. [java-spring.md] In supervised learning, the training data is labelled with the correct answers, and the model learns to predict those labels for new inputs \u2014 for example, classifying an email as spam or not spam. [ml-basics.md] This makes code easier to test, because dependencies can be replaced with mocks or stubs. [java-spring.md]"
+      }
+    ]
+  },
+  {
+    "method": "bm25",
+    "k": 5,
+    "n": 12,
+    "hit_rate": 1.0,
+    "mrr": 1.0,
+    "qa_citation_rate": 1.0,
+    "qa_term_rate": 0.9166666666666666,
+    "results": [
+      {
+        "id": "q1",
+        "question": "What is AEM built on?",
+        "expected_doc_id": "aem-basics.md",
+        "retrieved_doc_ids": [
+          "aem-basics.md",
+          "aem-basics.md",
+          "aem-basics.md"
+        ],
+        "rank": 1,
+        "hit": true,
+        "reciprocal_rank": 1.0,
+        "qa_cited_expected": true,
+        "qa_term_hit": true,
+        "answer": "AEM is built on three open technologies from the Apache Software Foundation. [aem-basics.md] AEM has two main run modes. [aem-basics.md]"
+      },
+      {
+        "id": "q2",
+        "question": "What does the dispatcher do in AEM?",
+        "expected_doc_id": "aem-basics.md",
+        "retrieved_doc_ids": [
+          "aem-basics.md",
+          "aem-basics.md",
+          "aem-basics.md",
+          "aem-basics.md"
+        ],
+        "rank": 1,
+        "hit": true,
+        "reciprocal_rank": 1.0,
+        "qa_cited_expected": true,
+        "qa_term_hit": true,
+        "answer": "A replication step copies approved content from author to publish, and a dispatcher, typically an Apache HTTP server module, caches published pages and protects the publish instances from unnecessary load. [aem-basics.md] AEM is built on three open technologies from the Apache Software Foundation. [aem-basics.md] AEM has two main run modes. [aem-basics.md]"
+      },
+      {
+        "id": "q3",
+        "question": "What is HTL used for in AEM?",
+        "expected_doc_id": "aem-basics.md",
+        "retrieved_doc_ids": [
+          "aem-basics.md",
+          "aem-basics.md",
+          "aem-basics.md",
+          "ml-basics.md",
+          "ml-basics.md"
+        ],
+        "rank": 1,
+        "hit": true,
+        "reciprocal_rank": 1.0,
+        "qa_cited_expected": true,
+        "qa_term_hit": true,
+        "answer": "Server-side rendering of components commonly uses HTL, the HTML Template Language, together with Sling Models, which are Java classes that expose repository data to the template in a clean, testable way. AEM has two main run modes. [aem-basics.md] It is part of the Adobe Experience Cloud and is widely used by large organisations to manage digital experiences across many sites and languages from a single platform. AEM is built on three open technologies from the Apache Software Foundation. [aem-basics.md] AEM is built on three open technologies from the Apache Software Foundation. [aem-basics.md] Data scientists split their data into a training set, used to fit the model, and a held-out test set, used to estimate how well the model generalises to unseen data. [ml-basics.md] test set, used to estimate how well the model generalises to unseen data. [ml-basics.md]"
+      },
+      {
+        "id": "q4",
+        "question": "What is the difference between AEM author and publish instances?",
+        "expected_doc_id": "aem-basics.md",
+        "retrieved_doc_ids": [
+          "aem-basics.md",
+          "aem-basics.md",
+          "ml-basics.md",
+          "aem-basics.md",
+          "aem-basics.md"
+        ],
+        "rank": 1,
+        "hit": true,
+        "reciprocal_rank": 1.0,
+        "qa_cited_expected": true,
+        "qa_term_hit": true,
+        "answer": "A replication step copies approved content from author to publish, and a dispatcher, typically an Apache HTTP server module, caches published pages and protects the publish instances from unnecessary load. [aem-basics.md] AEM has two main run modes. The author instance is where editors create and preview content, and the publish instance is the one that serves live traffic. [aem-basics.md] Embeddings power semantic search: a question and a passage can be compared by the distance between their vectors, which is the idea behind retrieval-augmented generation, where the most relevant passages are fetched first and then handed to a language model so its answer is grounded in real documents. [ml-basics.md] AEM is built on three open technologies from the Apache Software Foundation. [aem-basics.md]"
+      },
+      {
+        "id": "q5",
+        "question": "What does Spring Boot auto-configuration do?",
+        "expected_doc_id": "java-spring.md",
+        "retrieved_doc_ids": [
+          "java-spring.md",
+          "java-spring.md",
+          "java-spring.md",
+          "java-spring.md"
+        ],
+        "rank": 1,
+        "hit": true,
+        "reciprocal_rank": 1.0,
+        "qa_cited_expected": true,
+        "qa_term_hit": true,
+        "answer": "Its best-known feature is auto-configuration: Spring Boot inspects the libraries on the classpath and the properties the developer has set, and then configures beans automatically \u2014 for example, if an embedded database driver is present, it sets up a data source without manual XML or Java configuration. [java-spring.md] A typical Spring Boot web application uses Spring MVC to expose REST endpoints: classes annotated with @RestController map HTTP requests to methods, and responses are serialised to JSON automatically. [java-spring.md] Spring Boot builds on Spring to make standalone applications easy to create and run. [java-spring.md] Spring Boot Actuator adds production-ready features such as health checks, metrics and environment information over HTTP endpoints, which operations teams use to monitor running applications. [java-spring.md]"
+      },
+      {
+        "id": "q6",
+        "question": "How does Spring MVC expose REST endpoints?",
+        "expected_doc_id": "java-spring.md",
+        "retrieved_doc_ids": [
+          "java-spring.md",
+          "java-spring.md",
+          "java-spring.md",
+          "aem-basics.md",
+          "java-spring.md"
+        ],
+        "rank": 1,
+        "hit": true,
+        "reciprocal_rank": 1.0,
+        "qa_cited_expected": true,
+        "qa_term_hit": true,
+        "answer": "A typical Spring Boot web application uses Spring MVC to expose REST endpoints: classes annotated with @RestController map HTTP requests to methods, and responses are serialised to JSON automatically. [java-spring.md] Spring Boot Actuator adds production-ready features such as health checks, metrics and environment information over HTTP endpoints, which operations teams use to monitor running applications. [java-spring.md] # Java and the Spring Framework Spring is the most widely used framework for building enterprise Java applications. [java-spring.md] Server-side rendering of components commonly uses HTL, the HTML Template Language, together with Sling Models, which are Java classes that expose repository data to the template in a clean, testable way. [aem-basics.md] Boot builds on Spring to make standalone applications easy to create and run. [java-spring.md]"
+      },
+      {
+        "id": "q7",
+        "question": "What is dependency injection in Spring?",
+        "expected_doc_id": "java-spring.md",
+        "retrieved_doc_ids": [
+          "java-spring.md",
+          "java-spring.md",
+          "java-spring.md",
+          "java-spring.md"
+        ],
+        "rank": 1,
+        "hit": true,
+        "reciprocal_rank": 1.0,
+        "qa_cited_expected": true,
+        "qa_term_hit": true,
+        "answer": "# Java and the Spring Framework Spring is the most widely used framework for building enterprise Java applications. At its core is the Inversion of Control container, which creates objects and wires them together through dependency injection, so classes declare the collaborators they need instead of constructing them. [java-spring.md] Spring Data JPA simplifies database access by generating repository implementations from interface method names. [java-spring.md] Boot builds on Spring to make standalone applications easy to create and run. [java-spring.md] Spring Boot Actuator adds production-ready features such as health checks, metrics and environment information over HTTP endpoints, which operations teams use to monitor running applications. [java-spring.md]"
+      },
+      {
+        "id": "q8",
+        "question": "What does Spring Boot Actuator provide?",
+        "expected_doc_id": "java-spring.md",
+        "retrieved_doc_ids": [
+          "java-spring.md",
+          "java-spring.md",
+          "java-spring.md",
+          "java-spring.md"
+        ],
+        "rank": 1,
+        "hit": true,
+        "reciprocal_rank": 1.0,
+        "qa_cited_expected": true,
+        "qa_term_hit": true,
+        "answer": "Spring Boot Actuator adds production-ready features such as health checks, metrics and environment information over HTTP endpoints, which operations teams use to monitor running applications. [java-spring.md] Spring Boot builds on Spring to make standalone applications easy to create and run. [java-spring.md] Its best-known feature is auto-configuration: Spring Boot inspects the libraries on the classpath and the properties the developer has set, and then configures beans automatically \u2014 for example, if an embedded database driver is present, it sets up a data source without manual XML or Java configuration. [java-spring.md] A typical Spring Boot web application uses Spring MVC to expose REST endpoints: classes annotated with @RestController map HTTP requests to methods, and responses are serialised to JSON automatically. [java-spring.md]"
+      },
+      {
+        "id": "q9",
+        "question": "What is overfitting in machine learning?",
+        "expected_doc_id": "ml-basics.md",
+        "retrieved_doc_ids": [
+          "ml-basics.md",
+          "ml-basics.md",
+          "ml-basics.md",
+          "ml-basics.md"
+        ],
+        "rank": 1,
+        "hit": true,
+        "reciprocal_rank": 1.0,
+        "qa_cited_expected": true,
+        "qa_term_hit": false,
+        "answer": "regularisation and simply collecting more data help to reduce overfitting. Modern machine learning systems often represent text, images and other inputs as embeddings \u2014 dense numerical vectors in which similar items sit close together. [ml-basics.md] # Machine Learning Basics Machine learning is a branch of artificial intelligence in which a model learns patterns from data instead of being programmed with explicit rules. [ml-basics.md] Techniques such as cross-validation, regularisation and simply collecting more data help to reduce overfitting. [ml-basics.md] In unsupervised learning the data has no labels, and the model instead finds structure, such as grouping customers into clusters with similar behaviour. [ml-basics.md]"
+      },
+      {
+        "id": "q10",
+        "question": "How do supervised and unsupervised learning differ?",
+        "expected_doc_id": "ml-basics.md",
+        "retrieved_doc_ids": [
+          "ml-basics.md",
+          "ml-basics.md",
+          "ml-basics.md"
+        ],
+        "rank": 1,
+        "hit": true,
+        "reciprocal_rank": 1.0,
+        "qa_cited_expected": true,
+        "qa_term_hit": true,
+        "answer": "In supervised learning, the training data is labelled with the correct answers, and the model learns to predict those labels for new inputs \u2014 for example, classifying an email as spam or not spam. [ml-basics.md] In unsupervised learning the data has no labels, and the model instead finds structure, such as grouping customers into clusters with similar behaviour. [ml-basics.md] Modern machine learning systems often represent text, images and other inputs as embeddings \u2014 dense numerical vectors in which similar items sit close together. [ml-basics.md]"
+      },
+      {
+        "id": "q11",
+        "question": "What are embeddings used for in machine learning?",
+        "expected_doc_id": "ml-basics.md",
+        "retrieved_doc_ids": [
+          "ml-basics.md",
+          "ml-basics.md",
+          "ml-basics.md",
+          "ml-basics.md",
+          "ml-basics.md"
+        ],
+        "rank": 1,
+        "hit": true,
+        "reciprocal_rank": 1.0,
+        "qa_cited_expected": true,
+        "qa_term_hit": true,
+        "answer": "Modern machine learning systems often represent text, images and other inputs as embeddings \u2014 dense numerical vectors in which similar items sit close together. [ml-basics.md] # Machine Learning Basics Machine learning is a branch of artificial intelligence in which a model learns patterns from data instead of being programmed with explicit rules. [ml-basics.md] In unsupervised learning the data has no labels, and the model instead finds structure, such as grouping customers into clusters with similar behaviour. Data scientists split their data into a training set, used to fit the model, and a held-out test set, used to estimate how well the model generalises to unseen data. [ml-basics.md] embeddings \u2014 dense numerical vectors in which similar items sit close together. [ml-basics.md] test set, used to estimate how well the model generalises to unseen data. [ml-basics.md]"
+      },
+      {
+        "id": "q12",
+        "question": "Why split data into training and test sets?",
+        "expected_doc_id": "ml-basics.md",
+        "retrieved_doc_ids": [
+          "ml-basics.md",
+          "ml-basics.md",
+          "java-spring.md",
+          "ml-basics.md",
+          "java-spring.md"
+        ],
+        "rank": 1,
+        "hit": true,
+        "reciprocal_rank": 1.0,
+        "qa_cited_expected": true,
+        "qa_term_hit": true,
+        "answer": "Data scientists split their data into a training set, used to fit the model, and a held-out test set, used to estimate how well the model generalises to unseen data. [ml-basics.md] test set, used to estimate how well the model generalises to unseen data. This matters because of overfitting: a model that memorises the training examples, including their noise, can perform very well on the training set yet badly on new data. [ml-basics.md] Its best-known feature is auto-configuration: Spring Boot inspects the libraries on the classpath and the properties the developer has set, and then configures beans automatically \u2014 for example, if an embedded database driver is present, it sets up a data source without manual XML or Java configuration. [java-spring.md] In supervised learning, the training data is labelled with the correct answers, and the model learns to predict those labels for new inputs \u2014 for example, classifying an email as spam or not spam. [ml-basics.md] This makes code easier to test, because dependencies can be replaced with mocks or stubs. [java-spring.md]"
+      }
+    ]
+  },
+  {
+    "method": "combined",
+    "k": 5,
+    "n": 12,
+    "hit_rate": 1.0,
+    "mrr": 1.0,
+    "qa_citation_rate": 1.0,
+    "qa_term_rate": 0.9166666666666666,
+    "results": [
+      {
+        "id": "q1",
+        "question": "What is AEM built on?",
+        "expected_doc_id": "aem-basics.md",
+        "retrieved_doc_ids": [
+          "aem-basics.md",
+          "aem-basics.md",
+          "aem-basics.md"
+        ],
+        "rank": 1,
+        "hit": true,
+        "reciprocal_rank": 1.0,
+        "qa_cited_expected": true,
+        "qa_term_hit": true,
+        "answer": "AEM is built on three open technologies from the Apache Software Foundation. [aem-basics.md] AEM has two main run modes. [aem-basics.md]"
+      },
+      {
+        "id": "q2",
+        "question": "What does the dispatcher do in AEM?",
+        "expected_doc_id": "aem-basics.md",
+        "retrieved_doc_ids": [
+          "aem-basics.md",
+          "aem-basics.md",
+          "aem-basics.md",
+          "aem-basics.md"
+        ],
+        "rank": 1,
+        "hit": true,
+        "reciprocal_rank": 1.0,
+        "qa_cited_expected": true,
+        "qa_term_hit": true,
+        "answer": "A replication step copies approved content from author to publish, and a dispatcher, typically an Apache HTTP server module, caches published pages and protects the publish instances from unnecessary load. [aem-basics.md] AEM is built on three open technologies from the Apache Software Foundation. [aem-basics.md] AEM has two main run modes. [aem-basics.md]"
+      },
+      {
+        "id": "q3",
+        "question": "What is HTL used for in AEM?",
+        "expected_doc_id": "aem-basics.md",
+        "retrieved_doc_ids": [
+          "aem-basics.md",
+          "aem-basics.md",
+          "aem-basics.md",
+          "ml-basics.md",
+          "ml-basics.md"
+        ],
+        "rank": 1,
+        "hit": true,
+        "reciprocal_rank": 1.0,
+        "qa_cited_expected": true,
+        "qa_term_hit": true,
+        "answer": "It is part of the Adobe Experience Cloud and is widely used by large organisations to manage digital experiences across many sites and languages from a single platform. AEM is built on three open technologies from the Apache Software Foundation. [aem-basics.md] Server-side rendering of components commonly uses HTL, the HTML Template Language, together with Sling Models, which are Java classes that expose repository data to the template in a clean, testable way. AEM has two main run modes. [aem-basics.md] AEM is built on three open technologies from the Apache Software Foundation. [aem-basics.md] Data scientists split their data into a training set, used to fit the model, and a held-out test set, used to estimate how well the model generalises to unseen data. [ml-basics.md] test set, used to estimate how well the model generalises to unseen data. [ml-basics.md]"
+      },
+      {
+        "id": "q4",
+        "question": "What is the difference between AEM author and publish instances?",
+        "expected_doc_id": "aem-basics.md",
+        "retrieved_doc_ids": [
+          "aem-basics.md",
+          "aem-basics.md",
+          "aem-basics.md",
+          "ml-basics.md",
+          "aem-basics.md"
+        ],
+        "rank": 1,
+        "hit": true,
+        "reciprocal_rank": 1.0,
+        "qa_cited_expected": true,
+        "qa_term_hit": true,
+        "answer": "A replication step copies approved content from author to publish, and a dispatcher, typically an Apache HTTP server module, caches published pages and protects the publish instances from unnecessary load. [aem-basics.md] AEM has two main run modes. The author instance is where editors create and preview content, and the publish instance is the one that serves live traffic. [aem-basics.md] AEM is built on three open technologies from the Apache Software Foundation. [aem-basics.md] Embeddings power semantic search: a question and a passage can be compared by the distance between their vectors, which is the idea behind retrieval-augmented generation, where the most relevant passages are fetched first and then handed to a language model so its answer is grounded in real documents. [ml-basics.md]"
+      },
+      {
+        "id": "q5",
+        "question": "What does Spring Boot auto-configuration do?",
+        "expected_doc_id": "java-spring.md",
+        "retrieved_doc_ids": [
+          "java-spring.md",
+          "java-spring.md",
+          "java-spring.md",
+          "java-spring.md"
+        ],
+        "rank": 1,
+        "hit": true,
+        "reciprocal_rank": 1.0,
+        "qa_cited_expected": true,
+        "qa_term_hit": true,
+        "answer": "Its best-known feature is auto-configuration: Spring Boot inspects the libraries on the classpath and the properties the developer has set, and then configures beans automatically \u2014 for example, if an embedded database driver is present, it sets up a data source without manual XML or Java configuration. [java-spring.md] A typical Spring Boot web application uses Spring MVC to expose REST endpoints: classes annotated with @RestController map HTTP requests to methods, and responses are serialised to JSON automatically. [java-spring.md] Spring Boot builds on Spring to make standalone applications easy to create and run. [java-spring.md] Spring Boot Actuator adds production-ready features such as health checks, metrics and environment information over HTTP endpoints, which operations teams use to monitor running applications. [java-spring.md]"
+      },
+      {
+        "id": "q6",
+        "question": "How does Spring MVC expose REST endpoints?",
+        "expected_doc_id": "java-spring.md",
+        "retrieved_doc_ids": [
+          "java-spring.md",
+          "java-spring.md",
+          "java-spring.md",
+          "java-spring.md",
+          "aem-basics.md"
+        ],
+        "rank": 1,
+        "hit": true,
+        "reciprocal_rank": 1.0,
+        "qa_cited_expected": true,
+        "qa_term_hit": true,
+        "answer": "A typical Spring Boot web application uses Spring MVC to expose REST endpoints: classes annotated with @RestController map HTTP requests to methods, and responses are serialised to JSON automatically. [java-spring.md] Spring Boot Actuator adds production-ready features such as health checks, metrics and environment information over HTTP endpoints, which operations teams use to monitor running applications. [java-spring.md] # Java and the Spring Framework Spring is the most widely used framework for building enterprise Java applications. [java-spring.md] Boot builds on Spring to make standalone applications easy to create and run. [java-spring.md] Server-side rendering of components commonly uses HTL, the HTML Template Language, together with Sling Models, which are Java classes that expose repository data to the template in a clean, testable way. [aem-basics.md]"
+      },
+      {
+        "id": "q7",
+        "question": "What is dependency injection in Spring?",
+        "expected_doc_id": "java-spring.md",
+        "retrieved_doc_ids": [
+          "java-spring.md",
+          "java-spring.md",
+          "java-spring.md",
+          "java-spring.md"
+        ],
+        "rank": 1,
+        "hit": true,
+        "reciprocal_rank": 1.0,
+        "qa_cited_expected": true,
+        "qa_term_hit": true,
+        "answer": "# Java and the Spring Framework Spring is the most widely used framework for building enterprise Java applications. At its core is the Inversion of Control container, which creates objects and wires them together through dependency injection, so classes declare the collaborators they need instead of constructing them. [java-spring.md] Spring Data JPA simplifies database access by generating repository implementations from interface method names. [java-spring.md] Boot builds on Spring to make standalone applications easy to create and run. [java-spring.md] Spring Boot Actuator adds production-ready features such as health checks, metrics and environment information over HTTP endpoints, which operations teams use to monitor running applications. [java-spring.md]"
+      },
+      {
+        "id": "q8",
+        "question": "What does Spring Boot Actuator provide?",
+        "expected_doc_id": "java-spring.md",
+        "retrieved_doc_ids": [
+          "java-spring.md",
+          "java-spring.md",
+          "java-spring.md",
+          "java-spring.md"
+        ],
+        "rank": 1,
+        "hit": true,
+        "reciprocal_rank": 1.0,
+        "qa_cited_expected": true,
+        "qa_term_hit": true,
+        "answer": "Spring Boot Actuator adds production-ready features such as health checks, metrics and environment information over HTTP endpoints, which operations teams use to monitor running applications. [java-spring.md] Spring Boot builds on Spring to make standalone applications easy to create and run. [java-spring.md] A typical Spring Boot web application uses Spring MVC to expose REST endpoints: classes annotated with @RestController map HTTP requests to methods, and responses are serialised to JSON automatically. [java-spring.md] Its best-known feature is auto-configuration: Spring Boot inspects the libraries on the classpath and the properties the developer has set, and then configures beans automatically \u2014 for example, if an embedded database driver is present, it sets up a data source without manual XML or Java configuration. [java-spring.md]"
+      },
+      {
+        "id": "q9",
+        "question": "What is overfitting in machine learning?",
+        "expected_doc_id": "ml-basics.md",
+        "retrieved_doc_ids": [
+          "ml-basics.md",
+          "ml-basics.md",
+          "ml-basics.md",
+          "ml-basics.md"
+        ],
+        "rank": 1,
+        "hit": true,
+        "reciprocal_rank": 1.0,
+        "qa_cited_expected": true,
+        "qa_term_hit": false,
+        "answer": "# Machine Learning Basics Machine learning is a branch of artificial intelligence in which a model learns patterns from data instead of being programmed with explicit rules. [ml-basics.md] regularisation and simply collecting more data help to reduce overfitting. Modern machine learning systems often represent text, images and other inputs as embeddings \u2014 dense numerical vectors in which similar items sit close together. [ml-basics.md] Techniques such as cross-validation, regularisation and simply collecting more data help to reduce overfitting. [ml-basics.md] In unsupervised learning the data has no labels, and the model instead finds structure, such as grouping customers into clusters with similar behaviour. [ml-basics.md]"
+      },
+      {
+        "id": "q10",
+        "question": "How do supervised and unsupervised learning differ?",
+        "expected_doc_id": "ml-basics.md",
+        "retrieved_doc_ids": [
+          "ml-basics.md",
+          "ml-basics.md",
+          "ml-basics.md"
+        ],
+        "rank": 1,
+        "hit": true,
+        "reciprocal_rank": 1.0,
+        "qa_cited_expected": true,
+        "qa_term_hit": true,
+        "answer": "In supervised learning, the training data is labelled with the correct answers, and the model learns to predict those labels for new inputs \u2014 for example, classifying an email as spam or not spam. [ml-basics.md] In unsupervised learning the data has no labels, and the model instead finds structure, such as grouping customers into clusters with similar behaviour. [ml-basics.md] Modern machine learning systems often represent text, images and other inputs as embeddings \u2014 dense numerical vectors in which similar items sit close together. [ml-basics.md]"
+      },
+      {
+        "id": "q11",
+        "question": "What are embeddings used for in machine learning?",
+        "expected_doc_id": "ml-basics.md",
+        "retrieved_doc_ids": [
+          "ml-basics.md",
+          "ml-basics.md",
+          "ml-basics.md",
+          "ml-basics.md",
+          "ml-basics.md"
+        ],
+        "rank": 1,
+        "hit": true,
+        "reciprocal_rank": 1.0,
+        "qa_cited_expected": true,
+        "qa_term_hit": true,
+        "answer": "Modern machine learning systems often represent text, images and other inputs as embeddings \u2014 dense numerical vectors in which similar items sit close together. [ml-basics.md] # Machine Learning Basics Machine learning is a branch of artificial intelligence in which a model learns patterns from data instead of being programmed with explicit rules. [ml-basics.md] embeddings \u2014 dense numerical vectors in which similar items sit close together. [ml-basics.md] In unsupervised learning the data has no labels, and the model instead finds structure, such as grouping customers into clusters with similar behaviour. Data scientists split their data into a training set, used to fit the model, and a held-out test set, used to estimate how well the model generalises to unseen data. [ml-basics.md] test set, used to estimate how well the model generalises to unseen data. [ml-basics.md]"
+      },
+      {
+        "id": "q12",
+        "question": "Why split data into training and test sets?",
+        "expected_doc_id": "ml-basics.md",
+        "retrieved_doc_ids": [
+          "ml-basics.md",
+          "ml-basics.md",
+          "java-spring.md",
+          "ml-basics.md",
+          "java-spring.md"
+        ],
+        "rank": 1,
+        "hit": true,
+        "reciprocal_rank": 1.0,
+        "qa_cited_expected": true,
+        "qa_term_hit": true,
+        "answer": "Data scientists split their data into a training set, used to fit the model, and a held-out test set, used to estimate how well the model generalises to unseen data. [ml-basics.md] test set, used to estimate how well the model generalises to unseen data. This matters because of overfitting: a model that memorises the training examples, including their noise, can perform very well on the training set yet badly on new data. [ml-basics.md] Its best-known feature is auto-configuration: Spring Boot inspects the libraries on the classpath and the properties the developer has set, and then configures beans automatically \u2014 for example, if an embedded database driver is present, it sets up a data source without manual XML or Java configuration. [java-spring.md] In supervised learning, the training data is labelled with the correct answers, and the model learns to predict those labels for new inputs \u2014 for example, classifying an email as spam or not spam. [ml-basics.md] This makes code easier to test, because dependencies can be replaced with mocks or stubs. [java-spring.md]"
+      }
+    ]
+  }
+]
