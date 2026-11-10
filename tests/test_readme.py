@@ -110,7 +110,7 @@ class TestReadme(unittest.TestCase):
                       "Docker packaging is done, next are CI"):
             self.assertNotIn(stale, self.readme,
                              "stale claim still in README: %r" % stale)
-        self.assertIn("Days 1–18 of 21", self.readme)
+        self.assertIn("Days 1–20 of 21", self.readme)
         self.assertIn("CI", self.readme)
         self.assertIn("performance pass", self.readme)
 
