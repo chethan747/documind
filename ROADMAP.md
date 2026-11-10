@@ -203,6 +203,23 @@ Intelligence Platform by Day 21.
       tests/test_readme.py re-run demo/eval and a live server in a
       scratch copy and verify the quoted output, evaluation table,
       links and sections; suite now 310 tests.)
-- [ ] **Day 20** — Final evaluation run, results documented
+- [x] **Day 20** — Final evaluation run, results documented
+      (EVALUATION.md: headline results, per-question breakdown,
+      cutoff sensitivity, findings, limitations, reproducibility;
+      eval/final_report.json: the machine-readable headline run.
+      Final run at k=5, all methods: hit rate 1.000, MRR 1.000, QA
+      citation 1.000, QA terms 0.917 — unchanged since Day 6, and
+      every question's expected document ranks first for every
+      method. Cutoff sensitivity at k=1/3/5/10: retrieval is
+      cutoff-proof (hit rate and MRR 1.000 everywhere), but at k=1
+      the QA term rate falls to 0.667 for tfidf/combined (misses
+      q2, q3, q9, q11 — a single chunk can be on-topic yet miss
+      the expected terms) while bm25 holds 0.917; the shipped k=3
+      default avoids the weak spot. Bench alongside the run:
+      cold ~1.1–1.9 ms, warm ~0.005 ms per search (250–410x).
+      7 new tests in tests/test_final_eval.py re-run the harness
+      and check every number in the report against it, suite now
+      317 tests. Live demo verified: `eval --all-methods`,
+      `bench`, `demo` and a served /qa answer on the final code.)
 - [ ] **Day 21** — v1.0 release notes + RESUME.md with resume bullet points
       and project description
