@@ -4,7 +4,7 @@ All notable changes to DocuMind are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version numbers
 follow [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [1.0.0] — 2026-11-12
 
 ### Added
 
