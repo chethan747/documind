@@ -14,7 +14,7 @@ easy to study.
 
 ## Features
 
-**Done so far (v0.2 released 2026-11-04; Days 1–20 of 21)**
+**Done so far (v1.0 released 2026-11-12; Days 1–21 of 21)**
 
 - [x] Overlapping, sentence-aware text chunker
 - [x] TF-IDF vectoriser built from scratch (tokenisation, idf, sparse vectors)
@@ -233,7 +233,7 @@ citations are trimmed here, the full response carries all three):
 
 ```console
 $ curl -s localhost:8000/health
-{"status": "ok", "version": "0.2.0", "documents": 3, "chunks": 14}
+{"status": "ok", "version": "1.0.0", "documents": 3, "chunks": 14}
 
 $ curl -s -X POST localhost:8000/qa -H 'Content-Type: application/json' \
     -d '{"question": "What is AEM built on?"}' | python3 -m json.tool
