@@ -119,11 +119,18 @@ easy to study.
       0.667 for TF-IDF/combined while BM25 holds 0.917 — the shipped
       k=3 default avoids it
 
+- [x] v1.0 release (Day 21): `RELEASE.md` with the release notes and
+      `RESUME.md` with the project description and resume bullet
+      points, version bumped to 1.0.0, `[1.0.0]` entry in the
+      changelog; all 21 roadmap tasks complete
+
 **Roadmap** — see [ROADMAP.md](ROADMAP.md) for the full 21-day plan
 and [CHANGELOG.md](CHANGELOG.md) for release notes: Weeks 1–2 are
-complete and v0.2 (API + web app) is released; Docker packaging, CI,
-the performance pass, the README polish and the final evaluation run
-are done. Remaining: the v1.0 release (Day 21).
+complete and v0.2 (API + web app) was released 2026-11-04; Week 3
+added config + logging, Docker packaging, CI, the performance pass,
+the README polish and the final evaluation run, and v1.0 is now
+released — see [RELEASE.md](RELEASE.md) for the release notes and
+[RESUME.md](RESUME.md) for the resume write-up. All 21 days done.
 
 ## Architecture
 
@@ -446,6 +453,8 @@ EVALUATION.md final evaluation report (Day 20): headline results,
 tests/        unittest suite
 .github/workflows/ci.yml  GitHub Actions: tests on Python 3.10–3.12
               for every push / pull request to main
-ROADMAP.md    the 21-day build plan
-CHANGELOG.md  release notes (v0.2 API + web app released 2026-11-04)
+ROADMAP.md    the 21-day build plan (all 21 tasks complete)
+CHANGELOG.md  release notes (v1.0 released 2026-11-12)
+RELEASE.md    v1.0 release notes
+RESUME.md     project description + resume bullet points
 ```
