@@ -221,5 +221,5 @@ Intelligence Platform by Day 21.
       and check every number in the report against it, suite now
       317 tests. Live demo verified: `eval --all-methods`,
       `bench`, `demo` and a served /qa answer on the final code.)
-- [ ] **Day 21** — v1.0 release notes + RESUME.md with resume bullet points
+- [x] **Day 21** — v1.0 release notes + RESUME.md with resume bullet points
       and project description
