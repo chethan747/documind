@@ -6,4 +6,4 @@ second-stage answer reranking with focused snippet extraction, and
 extractive question answering with source citations.
 """
 
-__version__ = "0.2.0"
+__version__ = "1.0.0"
