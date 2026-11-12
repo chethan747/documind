@@ -21,7 +21,7 @@ def _read(name):
 class TestRelease(unittest.TestCase):
     def test_version_is_semver_and_v02(self):
         self.assertRegex(__version__, r"^\d+\.\d+\.\d+$")
-        self.assertEqual(__version__, "0.2.0")
+        self.assertEqual(__version__, "1.0.0")
 
     def test_cli_version_flag(self):
         proc = subprocess.run(
@@ -35,6 +35,7 @@ class TestRelease(unittest.TestCase):
         changelog = _read("CHANGELOG.md")
         self.assertIn("## [0.1.0]", changelog)
         self.assertIn("## [0.2.0]", changelog)
+        self.assertIn("## [1.0.0]", changelog)
         self.assertIn(__version__, changelog)
         for keyword in ("TF-IDF", "BM25", "rerank", "SQLite",
                         "evaluation", "citations", "REST API",
