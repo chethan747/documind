@@ -107,7 +107,8 @@ class TestReadme(unittest.TestCase):
         # Day 17 CI and Day 18 performance are done; the README must
         # not still present them as upcoming work.
         for stale in ("next are CI", "Done (v0.2 — API + web app)",
-                      "Docker packaging is done, next are CI"):
+                      "Docker packaging is done, next are CI",
+                      "Remaining: the v1.0 release"):
             self.assertNotIn(stale, self.readme,
                              "stale claim still in README: %r" % stale)
         self.assertIn("Days 1–21 of 21", self.readme)
