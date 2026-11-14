@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/chethan747/documind/actions/workflows/ci.yml/badge.svg)](https://github.com/chethan747/documind/actions/workflows/ci.yml)
 
-**Ask questions over your own documents and get answers with citations —
+**Ask questions over your own documents and get answers with citations -
 a retrieval-augmented generation (RAG) system built from scratch in pure Python.**
 
 DocuMind indexes a folder of text and Markdown documents, retrieves the
